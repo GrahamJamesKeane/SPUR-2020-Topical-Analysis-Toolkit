@@ -5,9 +5,8 @@ def menu():
     while True:
         user_input_1 = int(input("""    Main Menu
     1: Keyword Analysis
-    2: Topic Popularity
-    3: 
-    4: Exit
+    2: Topic Popularity  # To be added
+    3: Exit
     """))
         if user_input_1 == 1:
             user_input_2 = int(input("""    Keyword Analysis Menu
@@ -29,10 +28,8 @@ def menu():
             elif user_input_2 == 5:
                 exit(0)
         elif user_input_1 == 2:
-            pass
+            pass  # Topic popularity functions are accessed here
         elif user_input_1 == 3:
-            pass
-        elif user_input_1 == 4:
             exit(0)
 
 
