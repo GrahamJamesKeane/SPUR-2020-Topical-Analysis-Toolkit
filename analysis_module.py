@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from queries import clean_row, excluded_words, get_keywords
+from queries import clean_row, excluded_words, get_keywords_single_class, get_keywords_combined
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -92,32 +92,6 @@ def insert_keywords(key, keywords, dict_):
             dict_[key].append(value)
 
 
-# Returns categorical keywords with all associated classifications
-def get_keywords_combined(category):
-    conn = sqlite3.connect('TEST_DB_SPUR.db')
-    c = conn.cursor()
-    category_keyword_dict = {}
-    query = f"SELECT {category}, A1, A2, B1, B2 FROM ModuleDetails order by A1;"
-    for row in c.execute(query):
-        title_keywords = []
-        if row[0] is not None:
-            category_content = clean_row(row[0])
-            class_a1 = row[1]
-            class_a2 = row[2]
-            class_b1 = row[3]
-            class_b2 = row[4]
-            for title in category_content:
-                if title not in excluded_words:
-                    title_keywords.append(title)
-            if class_b1 and class_b2 is not None:
-                insert_keywords(f"{class_a1}, {class_a2}, {class_b1}, {class_b2}", title_keywords,
-                                category_keyword_dict)
-            else:
-                insert_keywords(f"{class_a1}, {class_a2}", title_keywords, category_keyword_dict)
-    conn.close()
-    return category_keyword_dict
-
-
 def get_count_combined(category_keyword_dict, length):
     category_keyword_count = {}
     unique_count = {}  # Count of unique keywords per classification
@@ -148,7 +122,6 @@ def combined(category, length):
 
 # Examines module title keywords with either primary or secondary classifications
 def iterate(category, filter_list, filter_list_flags):
-    print("flag")
     if filter_list["class_col_1"] == "A1" and filter_list["class_col_2"] == "B1":
         for class_query_word in primary_query_words:
             get_data(class_query_word, category, filter_list, filter_list_flags)
@@ -159,7 +132,7 @@ def iterate(category, filter_list, filter_list_flags):
 
 # Returns the query data
 def get_data(class_query_word, category, filter_list, filter_list_flags):
-    title_keywords = get_keywords(class_query_word, category, filter_list, filter_list_flags)
+    title_keywords = get_keywords_single_class(class_query_word, category, filter_list, filter_list_flags)
     if title_keywords is not None:
         count = get_count(title_keywords)
         result = f"There are a total of {len(count)} unique keywords in the class {class_query_word} "
@@ -179,7 +152,7 @@ def get_data(class_query_word, category, filter_list, filter_list_flags):
             else:
                 result += f"which are optional modules "
         if filter_list_flags.get("course"):
-            result +=f"in the programme {filter_list.get('course')}"
+            result += f"in the programme {filter_list.get('course')}"
         print(result + ".")
         print("-------------------")
         count_length = None

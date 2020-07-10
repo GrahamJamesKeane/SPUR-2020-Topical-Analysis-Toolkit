@@ -11,7 +11,8 @@ excluded_words = ['&', '(c)', '(ui)', '(ux)', '-', '1', '2', '3', '4', '5', '6',
                   'g', 'given', 'gives', 'goal', 'grasp', 'has', 'have', 'help', 'higher', 'how', 'i', 'identify', 'ii',
                   'iii', 'importance', 'in', 'includes', 'including', 'into', 'intro', 'introduction', 'involving',
                   'is', 'issues', 'it', 'its', 'know', 'knowledge', 'known', 'large', 'learn', 'lectures', 'level',
-                  'lo1', 'lo1', 'lo2', 'lo3', 'lo4', 'lo5', 'lo6', 'lo7', 'make', 'makes', 'merits', 'module', 'more', 'multiple', 'near',
+                  'lo1', 'lo1', 'lo2', 'lo3', 'lo4', 'lo5', 'lo6', 'lo7', 'make', 'makes', 'merits', 'module', 'more',
+                  'multiple', 'near',
                   'necessary', 'need', 'new', 'no', 'objectives', 'of', 'on', 'or', 'other', 'others', 'our', 'out',
                   'overcome', 'own', 'part', 'perform', 'persuasive', 'practical', 'problems', 'prove', 'provide',
                   'provision', 'pure', 'related', 'relevant', 'seen', 'seminars', 'sense', 'several', 'should',
@@ -55,17 +56,19 @@ def get_category_names(category, table, filter_category, filter_name):
     return category_names
 
 
-# Returns a list containing the keywords for a given classification
-def get_keywords(class_query_word, category, filter_list, filter_list_flags):
-    conn = sqlite3.connect('TEST_DB_SPUR.db')
-    title_keywords = []
+def query_builder(class_query_word, category, filter_list, filter_list_flags):
     count = 0
-    query = f"SELECT {category} FROM ModuleDetails "
+    query = None
+    if filter_list_flags["class_col_1"] and filter_list_flags["class_col_2"]:
+        query = f"SELECT {category} FROM ModuleDetails "
+    elif filter_list_flags["class_all"]:
+        query = f"SELECT {category}, A1, A2, B1, B2 FROM ModuleDetails "
     if filter_list_flags["university_name"] and filter_list_flags["year_offered"] or filter_list_flags["course"] or \
             filter_list_flags["core"]:
         query += f"INNER JOIN CourseDetails ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode "
     if filter_list_flags["year_offered"] or filter_list_flags["university_name"] or filter_list_flags["course"] or \
-            filter_list_flags["core"] or filter_list_flags["semester1"] or filter_list_flags["semester2"]:
+            filter_list_flags["core"] or filter_list_flags["semester1"] or filter_list_flags["semester2"] \
+            or class_query_word is not None:
         query += "WHERE "
     if filter_list_flags["semester1"] or filter_list_flags["semester2"]:
         count += 1
@@ -78,26 +81,48 @@ def get_keywords(class_query_word, category, filter_list, filter_list_flags):
             count += 1
             query += f"ModuleDetails.UniversityName = '{filter_list.get('university_name')}' "
     if filter_list_flags["year_offered"]:
-        if count in (1,2):
+        if count > 0:
             count += 1
             query += f"AND CourseDetails.YearOffered = {filter_list.get('year_offered')} "
         else:
             count += 1
             query += f"CourseDetails.YearOffered = {filter_list.get('year_offered')} "
     if filter_list_flags["core"]:
-        if count > 1:
+        if count > 0:
             count += 1
             query += f" AND CourseDetails.Core = '{filter_list.get('core')}' "
         else:
             count += 1
             query += f" CourseDetails.Core = '{filter_list.get('core')}' "
     if filter_list_flags["course"]:
-        if count > 1:
+        if count > 0:
             count += 1
             query += f"AND CourseDetails.CourseTitle = '{filter_list.get('course')}' "
         else:
+            count += 1
             query += f"CourseDetails.CourseTitle = '{filter_list.get('course')}' "
-    query += ";"
+    if filter_list_flags["class_col_1"] and filter_list_flags["class_col_2"]:
+        if count > 0:
+            count += 1
+            query += f"AND ModuleDetails.{filter_list['class_col_1']} = '{class_query_word}' "
+            query += f"OR ModuleDetails.{filter_list['class_col_2']} = '{class_query_word}' "
+        else:
+            count += 1
+            query += f"ModuleDetails.{filter_list['class_col_1']} = '{class_query_word}' "
+            query += f"OR ModuleDetails.{filter_list['class_col_2']} = '{class_query_word}' "
+    if filter_list_flags["class_col_1"] and filter_list_flags["class_col_2"]:
+        query += f"ORDER BY {filter_list['class_col_1']} ;"
+    elif filter_list_flags["class_all"]:
+        query += f"ORDER BY ModuleDetails.A1 ;"
+    print(query)
+    return query
+
+
+# Returns a list containing the keywords for a given classification
+def get_keywords_single_class(class_query_word, category, filter_list, filter_list_flags):
+    conn = sqlite3.connect('TEST_DB_SPUR.db')
+    title_keywords = []
+    query = query_builder(class_query_word, category, filter_list, filter_list_flags)
     data_frame = pd.read_sql_query(query, conn)
     if not data_frame.empty:
         for row in data_frame[category]:
@@ -115,3 +140,29 @@ def get_keywords(class_query_word, category, filter_list, filter_list_flags):
         print("-------------------")
         conn.close()
         return
+
+
+# Returns categorical keywords with all associated classifications
+def get_keywords_combined(category, filter_list, filter_list_flags):
+    conn = sqlite3.connect('TEST_DB_SPUR.db')
+    c = conn.cursor()
+    category_keyword_dict = {}
+    query = query_builder()
+    for row in c.execute(query):
+        title_keywords = []
+        if row[0] is not None:
+            category_content = clean_row(row[0])
+            class_a1 = row[1]
+            class_a2 = row[2]
+            class_b1 = row[3]
+            class_b2 = row[4]
+            for title in category_content:
+                if title not in excluded_words:
+                    title_keywords.append(title)
+            if class_b1 and class_b2 is not None:
+                insert_keywords(f"{class_a1}, {class_a2}, {class_b1}, {class_b2}", title_keywords,
+                                category_keyword_dict)
+            else:
+                insert_keywords(f"{class_a1}, {class_a2}", title_keywords, category_keyword_dict)
+    conn.close()
+    return category_keyword_dict

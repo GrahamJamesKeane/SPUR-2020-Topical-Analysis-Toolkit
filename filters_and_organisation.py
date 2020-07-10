@@ -15,10 +15,10 @@ def return_category_name(category_list, category_selection):
 
 
 def select_filters(category):
-    filter_list = {"class_col_1": None, "class_col_2": None, "class_3": None, "year_offered": None,
+    filter_list = {"class_col_1": None, "class_col_2": None, "class_all": None, "year_offered": None,
                    "university_name": None, "course": None,
                    "core": None, "semester1": None, "semester2": None, "length": None}
-    filter_list_flags = {"class_col_1": False, "class_col_2": False, "class_3": False,
+    filter_list_flags = {"class_col_1": False, "class_col_2": False, "class_all": False,
                          "year_offered": False, "university_name": False, "course": False,
                          "core": False, "semester1": False, "semester2": False, "length": False}
 
@@ -35,7 +35,7 @@ def select_filters(category):
     classification = int(input("""Select Classification:
     1: Primary
     2: Secondary
-    3: All
+    3: All  # To be added
     4: None
     """))
     if classification != 4:
@@ -50,7 +50,7 @@ def select_filters(category):
             filter_list["class_col_2"] = "B2"
             filter_list_flags["class_col_2"] = True
         elif classification == 3:
-            filter_list_flags["class_3"] = True
+            filter_list_flags["class_all"] = True
 
     semester = int(input("""Filter by Semester taken?
         1: First
