@@ -33,7 +33,7 @@ def get_simple_barplot(data, x_label, title):
     plt.close()
 
 
-def get_heatmap(stats, x1_label, x2_label, title):
+def get_heatmap(stats, x1_label, x2_label, title, width, height):
     sns.set_style("darkgrid")
     sns.set()
     font = {'family': 'serif',
@@ -43,8 +43,20 @@ def get_heatmap(stats, x1_label, x2_label, title):
             }
     stats_2 = stats.pivot(x2_label, x1_label, y_label)
     shape = stats_2.shape
-    f, ax = plt.subplots(figsize=(shape[1] / 2, 1.5 * shape[0]))
-    sns.heatmap(stats_2, square=True, ax=ax)
+    f, ax = plt.subplots(figsize=(width, height))
+    g = sns.heatmap(stats_2, square=True, ax=ax, cbar_kws={'fraction': 0.01})
+    g.set_xticklabels(
+        g.get_xticklabels(),
+        rotation=45,
+        horizontalalignment='right',
+        fontweight='book',
+        fontsize='small')
+    g.set_yticklabels(
+        g.get_yticklabels(),
+        rotation=45,
+        horizontalalignment='right',
+        fontweight='book',
+        fontsize='small')
     plt.title(title, fontdict=font)
     ax.set_ylabel('')
     ax.set_xlabel('')
@@ -252,7 +264,7 @@ def get_secondary_popularity_per_university():
     stats[y_label] = stats[y_label].astype('int32')
 
     # Plot the Dataset:
-    get_heatmap(stats, x1_label, x2_label, title)
+    get_heatmap(stats, x1_label, x2_label, title, 20, 9)
 
     # Order the dataset:
     stats.set_index(x1_label, inplace=True)
@@ -304,7 +316,7 @@ def get_primary_popularity_by_course():
 
     # Plot the Dataset:
     get_barplot(stats, x1_label, x2_label, title)
-    get_heatmap(stats, x1_label, x2_label, title)
+    get_heatmap(stats, x1_label, x2_label, title, 6, 9)
 
     # Order the dataset:
     stats.set_index(x1_label, inplace=True)
@@ -356,7 +368,7 @@ def get_secondary_popularity_by_course():
     stats[y_label] = stats[y_label].astype('int32')
 
     # Plot the Dataset:
-    get_heatmap(stats, x1_label, x2_label, title)
+    get_heatmap(stats, x1_label, x2_label, title, 20, 9)
 
     # Order the dataset:
     stats.set_index(x1_label, inplace=True)
@@ -404,7 +416,7 @@ def get_primary_popularity_by_year():
 
     # Plot the Dataset:
     get_barplot(stats, x1_label, x2_label, title)
-    get_heatmap(stats, x1_label, x2_label, title)
+    get_heatmap(stats, x1_label, x2_label, title, 10, 5)
 
     # Order the dataset:
     stats.set_index(x1_label, inplace=True)
@@ -451,7 +463,7 @@ def get_secondary_popularity_by_year():
     stats[y_label] = stats[y_label].astype('int32')
 
     # Plot the Dataset:
-    get_heatmap(stats, x1_label, x2_label, title)
+    get_heatmap(stats, x1_label, x2_label, title, 14, 7)
 
     # Order the dataset:
     stats.set_index(x1_label, inplace=True)
