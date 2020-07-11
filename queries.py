@@ -68,7 +68,7 @@ def query_builder(class_query_word, category, filter_list, filter_list_flags):
         count += 1
         query += f"ModuleDetails.Semester1 = '{filter_list['semester1']}' AND ModuleDetails.Semester2 = '{filter_list['semester2']}' "
     if filter_list_flags["university_name"]:
-        if count == 1:
+        if count > 0:
             count += 1
             query += f"AND ModuleDetails.UniversityName = '{filter_list.get('university_name')}' "
         else:
