@@ -1,4 +1,4 @@
-from analysis_module import get_query_word, get_data, iterate
+from analysis_module import get_query_word, get_data, iterate_classifications, combined
 from queries import get_category_names
 
 
@@ -148,8 +148,10 @@ def organise_query(category, filter_list, filter_list_flags):
             get_data(class_query_word,
                      category, filter_list, filter_list_flags)
         elif mode == 2:
-            iterate(category, filter_list, filter_list_flags)
+            iterate_classifications(category, filter_list, filter_list_flags)
         elif mode == 3:
-            pass
+            combined(category, filter_list, filter_list_flags)
         elif mode == 4:
             exit(0)
+    elif filter_list_flags["class_all"]:
+        combined(category, filter_list, filter_list_flags)

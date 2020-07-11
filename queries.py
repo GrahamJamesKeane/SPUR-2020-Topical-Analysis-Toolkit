@@ -1,11 +1,16 @@
-import re
 import sqlite3
+from collections import Counter
+from datetime import datetime
+
 import pandas as pd
+
+import analysis_module as am
 
 excluded_words = ['&', '(c)', '(ui)', '(ux)', '-', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'able', 'about',
                   'achieved', 'administer', 'against', 'aim', 'aims', 'all', 'also', 'an', 'and', 'any', 'any', 'apply',
                   'appreciate', 'approaches', 'appropriate', 'are', 'as', 'aspects', 'assess', 'associated', 'at',
-                  'basic', 'be', 'begin', 'between', 'both', 'by', 'can', 'carry', 'challenges', 'comes', 'completion',
+                  'basic', 'be', 'begin', 'between', 'better', 'both', 'by', 'can', 'carry', 'challenges', 'comes',
+                  'completion',
                   'concepts', 'course', 'define', 'depend', 'describe', 'different', 'do', 'drawn', 'e', 'equip',
                   'error', 'evaluate', 'explain', 'final', 'find', 'findings', 'first', 'focuses', 'for', 'from', 'fyp',
                   'g', 'given', 'gives', 'goal', 'grasp', 'has', 'have', 'help', 'higher', 'how', 'i', 'identify', 'ii',
@@ -27,16 +32,6 @@ excluded_words = ['&', '(c)', '(ui)', '(ux)', '-', '1', '2', '3', '4', '5', '6',
                   'having', 'ways', 'attain', 'goals', 'paying', 'particular', 'attention', 'requirements', 'include',
                   'arise', 'introducing', 'previous', 'covering', 'each', 'based', 'almost', 'introduces', 'may',
                   'small', ]
-
-
-# Clean strings taken from tables
-def clean_row(row):
-    chars = ['(', ')', '/', '.', ';', ':', ',', '"', '?', '+', '•', '●', '[', ']', '*', '--']
-    for char in chars:
-        row = row.replace(char, ' ')
-    row = row.strip(" .").lower()
-    regex = re.compile(r"\s+")
-    return re.split(regex, row)
 
 
 def get_category_names(category, table, filter_category, filter_name):
@@ -113,7 +108,7 @@ def query_builder(class_query_word, category, filter_list, filter_list_flags):
     if filter_list_flags["class_col_1"] and filter_list_flags["class_col_2"]:
         query += f"ORDER BY {filter_list['class_col_1']} ;"
     elif filter_list_flags["class_all"]:
-        query += f"ORDER BY ModuleDetails.A1 ;"
+        query += f"ORDER BY ModuleDetails.A1, ModuleDetails.A2, ModuleDetails.B1, ModuleDetails.B2 ;"
     print(query)
     return query
 
@@ -121,20 +116,18 @@ def query_builder(class_query_word, category, filter_list, filter_list_flags):
 # Returns a list containing the keywords for a given classification
 def get_keywords_single_class(class_query_word, category, filter_list, filter_list_flags):
     conn = sqlite3.connect('TEST_DB_SPUR.db')
-    title_keywords = []
+    category_keywords = []
     query = query_builder(class_query_word, category, filter_list, filter_list_flags)
     data_frame = pd.read_sql_query(query, conn)
     if not data_frame.empty:
         for row in data_frame[category]:
             if row is not None:
-                category_title = clean_row(row)  # remove whitespace & commas
+                category_title = am.clean_row(row)  # remove whitespace & commas
                 for title in category_title:
                     if title not in excluded_words:
-                        title_keywords.append(title)
-        # for key in title_keywords:
-        #    print(key)
+                        category_keywords.append(title)
         conn.close()
-        return title_keywords
+        return category_keywords
     else:
         print(f"There are 0 entries with the classification {class_query_word}.")
         print("-------------------")
@@ -146,23 +139,52 @@ def get_keywords_single_class(class_query_word, category, filter_list, filter_li
 def get_keywords_combined(category, filter_list, filter_list_flags):
     conn = sqlite3.connect('TEST_DB_SPUR.db')
     c = conn.cursor()
-    category_keyword_dict = {}
-    query = query_builder()
+    data = {}
+    category_keyword_df = pd.DataFrame(columns=["Classification", "Keyword", "Frequency"])
+    query = query_builder(None, category, filter_list, filter_list_flags)
     for row in c.execute(query):
-        title_keywords = []
+        category_keywords = []
         if row[0] is not None:
-            category_content = clean_row(row[0])
+            category_content = am.clean_row(row[0])
             class_a1 = row[1]
             class_a2 = row[2]
             class_b1 = row[3]
             class_b2 = row[4]
             for title in category_content:
                 if title not in excluded_words:
-                    title_keywords.append(title)
+                    category_keywords.append(title)
+            keyword_count = dict(Counter(am.get_count(category_keywords)).most_common(filter_list["length"]))
+            # print(keyword_count)
             if class_b1 and class_b2 is not None:
-                insert_keywords(f"{class_a1}, {class_a2}, {class_b1}, {class_b2}", title_keywords,
-                                category_keyword_dict)
+                key = f"{class_a1}, {class_a2}, {class_b1}, {class_b2}"
             else:
-                insert_keywords(f"{class_a1}, {class_a2}", title_keywords, category_keyword_dict)
+                key = f"{class_a1}, {class_a2}"
+
+            if key not in data:
+                data[key] = keyword_count
+                # print(data)
+            else:
+                group = dict(data.get(key))
+                for value, count in keyword_count.items():
+                    if value in group:
+                        group[value] += count
+                    else:
+                        group[value] = count
+                data[key] = group
+
+    for item, value in data.items():
+        popular = dict(Counter(value).most_common(filter_list["length"]))
+        for keyword, count in popular.items():
+            new_row = pd.Series(data={"Classification": item, "Keyword": keyword, "Frequency": count})
+            category_keyword_df = category_keyword_df.append(new_row, ignore_index=True)
+
+    category_keyword_df = category_keyword_df.sort_values(by=["Classification", "Keyword", "Frequency"],
+                                                          kind="heapsort")
+    category_keyword_df.set_index(["Classification", "Keyword"], inplace=True)
     conn.close()
-    return category_keyword_dict
+    stamp = datetime.today()
+    print(datetime)
+    file_name = "Output_files/myfile.csv"
+    category_keyword_df.to_csv(file_name)
+    result = [category_keyword_df, key]
+    return result

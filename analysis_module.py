@@ -1,12 +1,11 @@
 import re
-import sqlite3
 from collections import Counter
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from queries import clean_row, excluded_words, get_keywords_single_class, get_keywords_combined
+from queries import get_keywords_single_class, get_keywords_combined
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -52,6 +51,25 @@ secondary_query_words = ['ACCESSIBILITY', 'ARCHITECTURES', 'ARTIFICIAL INTELLIGE
                          'VISUALISATION', 'WORLD WIDE WEB']
 
 
+# Clean strings taken from tables
+def clean_row(row):
+    chars = ['(', ')', '/', '.', ';', ':', ',', '"', '?', '+', '•', '●', '[', ']', '*', '--']
+    for char in chars:
+        row = row.replace(char, ' ')
+    row = row.strip(" .").lower()
+    regex = re.compile(r"\s+")
+    return re.split(regex, row)
+
+
+# Add classifications and keywords/values to a data frame
+def insert_to_df(key, keywords, df):
+    for keyword, count in keywords.items():
+        # print(key + " " + keyword + " " + str(count))
+        new_row = pd.Series(data={"Classification": key, "Keyword": keyword, "Frequency": count})
+        df = df.append(new_row, ignore_index=True)
+        return df
+
+
 # Sorts the compiled lists above
 def sort_query_words(list_):
     list_.sort()
@@ -61,9 +79,9 @@ def sort_query_words(list_):
 
 
 # Returns a count of unique keywords
-def get_count(title_keywords):
+def get_count(category_keywords):
     count = Counter()
-    for word in title_keywords:
+    for word in category_keywords:
         count[word] += 1
     return count
 
@@ -115,13 +133,15 @@ def get_data_combined(category_keyword_count, unique_count):
 
 
 # combined analysis
-def combined(category, length):
-    category_keyword_dict = get_keywords_combined(category)
-    get_count_combined(category_keyword_dict, length)
+def combined(category, filter_list, filter_list_flags):
+    result = get_keywords_combined(category, filter_list, filter_list_flags)
+    print(result[0])
+    # plot_query(result[0], result[1])
+    # get_count_combined(category_keyword_dict, length)
 
 
 # Examines module title keywords with either primary or secondary classifications
-def iterate(category, filter_list, filter_list_flags):
+def iterate_classifications(category, filter_list, filter_list_flags):
     if filter_list["class_col_1"] == "A1" and filter_list["class_col_2"] == "B1":
         for class_query_word in primary_query_words:
             get_data(class_query_word, category, filter_list, filter_list_flags)
@@ -130,7 +150,8 @@ def iterate(category, filter_list, filter_list_flags):
             get_data(class_query_word, category, filter_list, filter_list_flags)
 
 
-# Returns the query data
+# Returns the query data for primary or secondary classification queries when selected from options as
+# individual or iterate
 def get_data(class_query_word, category, filter_list, filter_list_flags):
     title_keywords = get_keywords_single_class(class_query_word, category, filter_list, filter_list_flags)
     if title_keywords is not None:
