@@ -1,7 +1,6 @@
 import sqlite3
 from collections import Counter
 from datetime import datetime
-
 import pandas as pd
 
 import analysis_module as am
@@ -109,7 +108,7 @@ def query_builder(class_query_word, category, filter_list, filter_list_flags):
         query += f"ORDER BY {filter_list['class_col_1']} ;"
     elif filter_list_flags["class_all"]:
         query += f"ORDER BY ModuleDetails.A1, ModuleDetails.A2, ModuleDetails.B1, ModuleDetails.B2 ;"
-    print(query)
+    # print(query)
     return query
 
 
@@ -135,13 +134,61 @@ def get_keywords_single_class(class_query_word, category, filter_list, filter_li
         return
 
 
-# Returns categorical keywords with all associated classifications
-def get_keywords_combined(category, filter_list, filter_list_flags):
+def build_dictionary(key, data, keyword_count):
+    if key not in data:
+        data[key] = keyword_count
+    else:
+        group = dict(data.get(key))
+        for value, count in keyword_count.items():
+            if value in group:
+                group[value] += count
+            else:
+                group[value] = count
+        data[key] = group
+
+    return data
+
+
+def filter_excluded_words(category_content):
+    category_keywords = []
+    for title in category_content:
+        if title not in excluded_words:
+            category_keywords.append(title)
+    return category_keywords
+
+
+def transfer_to_df(data, length):
+    category_keyword_df = pd.DataFrame(columns=["Classification", "Keyword", "Frequency"])
+    for item, value in data.items():
+
+        popular = dict(Counter(value).most_common(length))
+
+        for keyword, count in popular.items():
+            new_row = pd.Series(data={"Classification": item, "Keyword": keyword, "Frequency": count})
+            category_keyword_df = category_keyword_df.append(new_row, ignore_index=True)
+
+    # sort the data-frame:
+    category_keyword_df = category_keyword_df.sort_values(by=["Classification", "Keyword"],
+                                                          kind="heapsort")
+    # Assign indices:
+    category_keyword_df.set_index(["Classification", "Keyword"], inplace=True)
+    return category_keyword_df
+
+
+def output_to_file(category_keyword_df):
+    stamp = str(datetime.today()).replace(":", ".")
+    file_name = f"Output_files/all_classifications_{stamp}.csv"
+    category_keyword_df.to_csv(file_name)
+
+
+# Returns categorical keywords and their frequency with all associated classifications
+def get_combined_class_keywords(category, filter_list, filter_list_flags):
     conn = sqlite3.connect('TEST_DB_SPUR.db')
     c = conn.cursor()
     data = {}
-    category_keyword_df = pd.DataFrame(columns=["Classification", "Keyword", "Frequency"])
     query = query_builder(None, category, filter_list, filter_list_flags)
+
+    # Fetch query from DB:
     for row in c.execute(query):
         category_keywords = []
         if row[0] is not None:
@@ -150,41 +197,55 @@ def get_keywords_combined(category, filter_list, filter_list_flags):
             class_a2 = row[2]
             class_b1 = row[3]
             class_b2 = row[4]
-            for title in category_content:
-                if title not in excluded_words:
-                    category_keywords.append(title)
-            keyword_count = dict(Counter(am.get_count(category_keywords)).most_common(filter_list["length"]))
-            # print(keyword_count)
             if class_b1 and class_b2 is not None:
                 key = f"{class_a1}, {class_a2}, {class_b1}, {class_b2}"
             else:
                 key = f"{class_a1}, {class_a2}"
 
-            if key not in data:
-                data[key] = keyword_count
-                # print(data)
-            else:
-                group = dict(data.get(key))
-                for value, count in keyword_count.items():
-                    if value in group:
-                        group[value] += count
-                    else:
-                        group[value] = count
-                data[key] = group
+            # Filter excluded words
+            category_keywords = filter_excluded_words(category_content)
 
-    for item, value in data.items():
-        popular = dict(Counter(value).most_common(filter_list["length"]))
-        for keyword, count in popular.items():
-            new_row = pd.Series(data={"Classification": item, "Keyword": keyword, "Frequency": count})
-            category_keyword_df = category_keyword_df.append(new_row, ignore_index=True)
+            # Get most popular keywords
+            keyword_count = dict(Counter(am.get_count(category_keywords)).most_common(filter_list["length"]))
 
-    category_keyword_df = category_keyword_df.sort_values(by=["Classification", "Keyword", "Frequency"],
-                                                          kind="heapsort")
-    category_keyword_df.set_index(["Classification", "Keyword"], inplace=True)
-    conn.close()
-    stamp = datetime.today()
-    print(datetime)
-    file_name = "Output_files/myfile.csv"
-    category_keyword_df.to_csv(file_name)
+            # Add keys, keywords, and frequency to dictionary
+            data = build_dictionary(key, data, keyword_count)
+
+    # Transfer information to data-frame:
+    category_keyword_df = transfer_to_df(data, filter_list["length"])
+
+    # Output data-frame to .csv
+    output_to_file(category_keyword_df)
+
+    # Return data-frame and key  as list
     result = [category_keyword_df, key]
+
+    conn.close()
     return result
+
+
+# Returns categorical keywords and their frequency with all associated classifications
+def get_primary_or_secondary_keywords_combined(class_query_word, category, filter_list, filter_list_flags, data):
+    conn = sqlite3.connect('TEST_DB_SPUR.db')
+    c = conn.cursor()
+
+    query = query_builder(class_query_word, category, filter_list, filter_list_flags)
+
+    # Fetch query from DB:
+    for row in c.execute(query):
+        category_keywords = []
+        if row is not None:
+            category_content = am.clean_row(row[0])
+
+            # Filter excluded words
+            category_keywords = filter_excluded_words(category_content)
+
+            # Get most popular keywords
+            keyword_count = dict(Counter(am.get_count(category_keywords)).most_common(filter_list["length"]))
+
+            # Add keys, keywords, and frequency to dictionary
+            data = build_dictionary(class_query_word, data, keyword_count)
+
+    conn.close()
+
+    return data

@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from queries import get_keywords_single_class, get_keywords_combined
+from queries import get_keywords_single_class, get_primary_or_secondary_keywords_combined, transfer_to_df, \
+    output_to_file
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -62,12 +63,12 @@ def clean_row(row):
 
 
 # Add classifications and keywords/values to a data frame
-def insert_to_df(key, keywords, df):
-    for keyword, count in keywords.items():
-        # print(key + " " + keyword + " " + str(count))
-        new_row = pd.Series(data={"Classification": key, "Keyword": keyword, "Frequency": count})
-        df = df.append(new_row, ignore_index=True)
-        return df
+# def insert_to_df(key, keywords, df):
+#    for keyword, count in keywords.items():
+#        # print(key + " " + keyword + " " + str(count))
+#        new_row = pd.Series(data={"Classification": key, "Keyword": keyword, "Frequency": count})
+#        df = df.append(new_row, ignore_index=True)
+#        return df
 
 
 # Sorts the compiled lists above
@@ -101,53 +102,54 @@ def plot_query(data, query_selection):
     plt.close()
 
 
-# Add classifications and keywords/values to a dictionary
-def insert_keywords(key, keywords, dict_):
-    if key not in dict_:
-        dict_[key] = keywords
-    else:
-        for value in keywords:
-            dict_[key].append(value)
+# def get_count_combined(category_keyword_dict, length):
+#    category_keyword_count = {}
+#   unique_count = {}  # Count of unique keywords per classification
+#   for key, values in category_keyword_dict.items():
+#      count = Counter()
+#     for word in values:
+#        count[word] += 1
+#   insert_keywords(key, len(count), unique_count)
+#  data = pd.DataFrame(Counter(count).most_common(length), columns=["Keyword", "Frequency"])
+#  insert_keywords(key, data, category_keyword_count)
+# get_data_combined(category_keyword_count, unique_count)
 
 
-def get_count_combined(category_keyword_dict, length):
-    category_keyword_count = {}
-    unique_count = {}  # Count of unique keywords per classification
-    for key, values in category_keyword_dict.items():
-        count = Counter()
-        for word in values:
-            count[word] += 1
-        insert_keywords(key, len(count), unique_count)
-        data = pd.DataFrame(Counter(count).most_common(length), columns=["Keyword", "Frequency"])
-        insert_keywords(key, data, category_keyword_count)
-    get_data_combined(category_keyword_count, unique_count)
-
-
-def get_data_combined(category_keyword_count, unique_count):
-    for key, values in category_keyword_count.items():
-        print(f"There are a total of {unique_count.get(key)} unique keywords in the combined class {key}.")
-        print(f"Popular keywords are:")
-        print(values)
-        print("-------------------")
-        plot_query(values, key)
-
-
-# combined analysis
-def combined(category, filter_list, filter_list_flags):
-    result = get_keywords_combined(category, filter_list, filter_list_flags)
-    print(result[0])
-    # plot_query(result[0], result[1])
-    # get_count_combined(category_keyword_dict, length)
+# def get_data_combined(category_keyword_count, unique_count):
+#    for key, values in category_keyword_count.items():
+#        print(f"There are a total of {unique_count.get(key)} unique keywords in the combined class {key}.")
+#        print(f"Popular keywords are:")
+#        print(values)
+#        print("-------------------")
+#        plot_query(values, key)
 
 
 # Examines module title keywords with either primary or secondary classifications
-def iterate_classifications(category, filter_list, filter_list_flags):
+def iterate_classifications(category, filter_list, filter_list_flags, mode):
+    data = {}
+
+    result = [None, None]
     if filter_list["class_col_1"] == "A1" and filter_list["class_col_2"] == "B1":
         for class_query_word in primary_query_words:
-            get_data(class_query_word, category, filter_list, filter_list_flags)
+            if mode:
+                get_data(class_query_word, category, filter_list, filter_list_flags)
+            else:
+                data = get_primary_or_secondary_keywords_combined(class_query_word, category,
+                                                                  filter_list, filter_list_flags, data)
     elif filter_list["class_col_1"] == "A2" and filter_list["class_col_2"] == "B2":
         for class_query_word in secondary_query_words:
-            get_data(class_query_word, category, filter_list, filter_list_flags)
+            if mode:
+                get_data(class_query_word, category, filter_list, filter_list_flags)
+            else:
+                data = get_primary_or_secondary_keywords_combined(class_query_word, category,
+                                                                  filter_list, filter_list_flags, data)
+
+    if not mode:
+        # Transfer information to data-frame:
+        category_keyword_df = transfer_to_df(data, filter_list["length"])
+        # Output data-frame to .csv
+        output_to_file(category_keyword_df)
+        print(category_keyword_df)
 
 
 # Returns the query data for primary or secondary classification queries when selected from options as
