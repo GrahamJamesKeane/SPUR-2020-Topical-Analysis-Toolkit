@@ -224,7 +224,8 @@ def get_combined_class_keywords(category, filter_list, filter_list_flags):
     return result
 
 
-# Returns categorical keywords and their frequency with all associated classifications
+# Returns categorical keywords and their frequency with all associated classifications for primary &
+# secondary classifications:
 def get_primary_or_secondary_keywords_combined(class_query_word, category, filter_list, filter_list_flags, data):
     conn = sqlite3.connect('TEST_DB_SPUR.db')
     c = conn.cursor()

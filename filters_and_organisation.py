@@ -1,5 +1,5 @@
 from analysis_module import get_query_word, get_data, iterate_classifications
-from queries import get_category_names, get_combined_class_keywords, output_to_file
+from queries import get_category_names, get_combined_class_keywords
 
 
 def print_category_names(category_names):
@@ -155,8 +155,5 @@ def organise_query(category, filter_list, filter_list_flags):
             exit(0)
     elif filter_list_flags["class_all"]:
         result = get_combined_class_keywords(category, filter_list, filter_list_flags)
-        # Output data-frame to .csv
-        # output_to_file(result[0])
         print(result[0])
         # plot_query(result[0], result[1])
-        # get_count_combined(category_keyword_dict, length)

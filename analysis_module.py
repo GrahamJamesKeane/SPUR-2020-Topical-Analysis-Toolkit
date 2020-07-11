@@ -52,7 +52,7 @@ secondary_query_words = ['ACCESSIBILITY', 'ARCHITECTURES', 'ARTIFICIAL INTELLIGE
                          'VISUALISATION', 'WORLD WIDE WEB']
 
 
-# Clean strings taken from tables
+# Clean strings taken from tables to improve processing
 def clean_row(row):
     chars = ['(', ')', '/', '.', ';', ':', ',', '"', '?', '+', '•', '●', '[', ']', '*', '--']
     for char in chars:
@@ -62,16 +62,7 @@ def clean_row(row):
     return re.split(regex, row)
 
 
-# Add classifications and keywords/values to a data frame
-# def insert_to_df(key, keywords, df):
-#    for keyword, count in keywords.items():
-#        # print(key + " " + keyword + " " + str(count))
-#        new_row = pd.Series(data={"Classification": key, "Keyword": keyword, "Frequency": count})
-#        df = df.append(new_row, ignore_index=True)
-#        return df
-
-
-# Sorts the compiled lists above
+# Sorts the compiled lists above, only used when adding new words to the list
 def sort_query_words(list_):
     list_.sort()
     for i in range(len(list_)):
@@ -102,58 +93,40 @@ def plot_query(data, query_selection):
     plt.close()
 
 
-# def get_count_combined(category_keyword_dict, length):
-#    category_keyword_count = {}
-#   unique_count = {}  # Count of unique keywords per classification
-#   for key, values in category_keyword_dict.items():
-#      count = Counter()
-#     for word in values:
-#        count[word] += 1
-#   insert_keywords(key, len(count), unique_count)
-#  data = pd.DataFrame(Counter(count).most_common(length), columns=["Keyword", "Frequency"])
-#  insert_keywords(key, data, category_keyword_count)
-# get_data_combined(category_keyword_count, unique_count)
-
-
-# def get_data_combined(category_keyword_count, unique_count):
-#    for key, values in category_keyword_count.items():
-#        print(f"There are a total of {unique_count.get(key)} unique keywords in the combined class {key}.")
-#        print(f"Popular keywords are:")
-#        print(values)
-#        print("-------------------")
-#        plot_query(values, key)
-
-
-# Examines module title keywords with either primary or secondary classifications
+# Selects module title keywords for primary or secondary classifications either in a detailed iterative mode
+# or collectively in a combined mode:
 def iterate_classifications(category, filter_list, filter_list_flags, mode):
     data = {}
 
-    result = [None, None]
+    # Primary Classifications:
     if filter_list["class_col_1"] == "A1" and filter_list["class_col_2"] == "B1":
         for class_query_word in primary_query_words:
-            if mode:
+            if mode:  # Individual Mode:
                 get_data(class_query_word, category, filter_list, filter_list_flags)
-            else:
+            else:  # All mode
                 data = get_primary_or_secondary_keywords_combined(class_query_word, category,
                                                                   filter_list, filter_list_flags, data)
+    # Secondary Classifications:
     elif filter_list["class_col_1"] == "A2" and filter_list["class_col_2"] == "B2":
         for class_query_word in secondary_query_words:
-            if mode:
+            if mode:  # Individual Mode:
                 get_data(class_query_word, category, filter_list, filter_list_flags)
-            else:
+            else:  # All mode
                 data = get_primary_or_secondary_keywords_combined(class_query_word, category,
                                                                   filter_list, filter_list_flags, data)
 
     if not mode:
         # Transfer information to data-frame:
         category_keyword_df = transfer_to_df(data, filter_list["length"])
+
         # Output data-frame to .csv
         output_to_file(category_keyword_df)
         print(category_keyword_df)
 
+        # plot query goes here
 
-# Returns the query data for primary or secondary classification queries when selected from options as
-# individual or iterate
+
+# Returns the query data with a description for primary or secondary classification queries:
 def get_data(class_query_word, category, filter_list, filter_list_flags):
     title_keywords = get_keywords_single_class(class_query_word, category, filter_list, filter_list_flags)
     if title_keywords is not None:
