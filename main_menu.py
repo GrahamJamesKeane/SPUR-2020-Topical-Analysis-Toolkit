@@ -2,6 +2,7 @@ from filters_and_organisation import select_filters
 from topic_stats import get_stats
 
 
+# Start here:
 def menu():
     while True:
         user_input_1 = int(input("""    Main Menu
