@@ -1,11 +1,12 @@
 from filters_and_organisation import select_filters
+from topic_stats import get_stats
 
 
 def menu():
     while True:
         user_input_1 = int(input("""    Main Menu
     1: Keyword Analysis
-    2: Topic Popularity  # To be added
+    2: Topic Stats
     3: Exit
     """))
         if user_input_1 == 1:
@@ -28,7 +29,7 @@ def menu():
             elif user_input_2 == 5:
                 exit(0)
         elif user_input_1 == 2:
-            pass  # Topic popularity functions are accessed here
+            get_stats()
         elif user_input_1 == 3:
             exit(0)
 
