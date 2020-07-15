@@ -7,6 +7,7 @@ import seaborn as sns
 
 from queries import get_keywords_single_class, get_primary_or_secondary_keywords_combined, transfer_to_df, \
     output_to_file
+from topic_stats import get_barplot
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -19,7 +20,7 @@ primary_query_words = ['APPLIED COMPUTING', 'COMPUTER SYSTEMS ORGANISATION', 'CO
                        'SOFTWARE & ITS ENGINEERING', 'THEORY OF COMPUTATION']
 
 secondary_query_words = ['ACCESSIBILITY', 'ARCHITECTURES', 'ARTIFICIAL INTELLIGENCE', 'ARTS & HUMANITIES',
-                         'COLLABORATIVE & SOCIAL COMPUTING', 'COMMON', 'COMMUNICATION HARDWARE',
+                         'COLLABORATIVE & SOCIAL COMPUTING', 'COMMON', 'COMMUNICATION HARDWARE, INTERFACES & STORAGE',
                          'COMPUTATIONAL COMPLEXITY & CRYPTOGRAPHY', 'COMPUTER ARCHITECTURE', 'COMPUTER FORENSICS',
                          'COMPUTER GRAPHICS', 'COMPUTERS IN OTHER DOMAINS', 'COMPUTING / TECHNOLOGY POLICY',
                          'CONCURRENT COMPUTING METHODOLOGIES', 'CONTINUOUS MATHEMATICS',
@@ -123,7 +124,17 @@ def iterate_classifications(category, filter_list, filter_list_flags, mode):
         output_to_file(category_keyword_df)
         print(category_keyword_df)
 
+        # Column Labels & Graph Title:
+        # x1_label = "Keyword"
+        # x2_label = "Classification"
+        # x3_label = "Frequency"
+        # title = "Keyword Popularity by Classification"
+        # Set Column Datatype:
+        # category_keyword_df[x1_label] = category_keyword_df[x1_label].astype('category')
+        # category_keyword_df[x2_label] = category_keyword_df[x2_label].astype('category')
+        # category_keyword_df[x3_label] = category_keyword_df[x3_label].astype('int32')
         # plot query goes here
+        # get_barplot(category_keyword_df, x1_label, x2_label, title, 40, .9)
 
 
 # Returns the query data with a description for primary or secondary classification queries:

@@ -171,7 +171,7 @@ def transfer_to_df(data, length):
     category_keyword_df = category_keyword_df.sort_values(by=["Classification", "Keyword"],
                                                           kind="heapsort")
     # Assign indices:
-    category_keyword_df.set_index(["Classification", "Keyword"], inplace=True)
+    # category_keyword_df.set_index(["Classification", "Keyword"], inplace=True)
     return category_keyword_df
 
 
