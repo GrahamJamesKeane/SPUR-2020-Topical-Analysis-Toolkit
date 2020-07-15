@@ -28,7 +28,7 @@ def get_simple_barplot(data, x_label, title):
         fontsize='small')
     # chart.set_title(query_selection)
     plt.title(title)
-    plt.show()
+    # plt.show()
     output_to_png(chart, title)
     plt.close()
 
@@ -60,7 +60,7 @@ def get_heatmap(stats, x1_label, x2_label, title, width, height, annot):
     plt.title(title, fontdict=font)
     ax.set_ylabel('')
     ax.set_xlabel('')
-    plt.show()
+    # plt.show()
     output_to_png(f, title)
     plt.close()
 
@@ -91,7 +91,7 @@ def get_barplot(stats, x1_label, x2_label, title, height, aspect):
         fontsize='small')
     plt.title(title, fontdict=font)
     plt.legend(title=x2_label, bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
-    plt.show()
+    # plt.show()
     output_to_png(chart, title)
     plt.close()
 
@@ -471,7 +471,7 @@ def get_primary_popularity_by_year():
 
     # Plot the Dataset:
     get_barplot(stats, x1_label, x2_label, title, 8, 2)
-    get_heatmap(stats, x1_label, x2_label, title, 10, 5, True)
+    get_heatmap(stats, x1_label, x2_label, title, 10, 7, True)
 
     # Order the dataset:
     stats.set_index(x1_label, inplace=True)
@@ -594,7 +594,7 @@ def get_stats():
     output_to_file(s_core_stats)
 
 
-get_stats()
+# get_stats()
 # get_primary_popularity_per_university()
 # get_secondary_popularity_per_university()
 # get_primary_popularity_by_course()
