@@ -156,4 +156,4 @@ def organise_query(category, filter_list, filter_list_flags):
     elif filter_list_flags["class_all"]:
         result = get_combined_class_keywords(category, filter_list, filter_list_flags)
         print(result[0])
-        # plot_query(result[0], result[1])
+        # plot function to go here

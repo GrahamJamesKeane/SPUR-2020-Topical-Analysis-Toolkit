@@ -7,7 +7,7 @@ import seaborn as sns
 
 from queries import get_keywords_single_class, get_primary_or_secondary_keywords_combined, transfer_to_df, \
     output_to_file
-from topic_stats import get_barplot
+
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -124,17 +124,7 @@ def iterate_classifications(category, filter_list, filter_list_flags, mode):
         output_to_file(category_keyword_df)
         print(category_keyword_df)
 
-        # Column Labels & Graph Title:
-        # x1_label = "Keyword"
-        # x2_label = "Classification"
-        # x3_label = "Frequency"
-        # title = "Keyword Popularity by Classification"
-        # Set Column Datatype:
-        # category_keyword_df[x1_label] = category_keyword_df[x1_label].astype('category')
-        # category_keyword_df[x2_label] = category_keyword_df[x2_label].astype('category')
-        # category_keyword_df[x3_label] = category_keyword_df[x3_label].astype('int32')
-        # plot query goes here
-        # get_barplot(category_keyword_df, x1_label, x2_label, title, 40, .9)
+        # plot function to go here
 
 
 # Returns the query data with a description for primary or secondary classification queries:

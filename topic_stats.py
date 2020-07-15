@@ -65,7 +65,7 @@ def get_heatmap(stats, x1_label, x2_label, title, width, height, annot):
     plt.close()
 
 
-def get_barplot(stats, x1_label, x2_label, title):
+def get_barplot(stats, x1_label, x2_label, title, height, aspect):
     font = {'family': 'serif',
             'color': 'black',
             'weight': 'normal',
@@ -80,8 +80,8 @@ def get_barplot(stats, x1_label, x2_label, title):
         hue=x2_label,
         data=stats,
         kind='bar',
-        height=8,
-        aspect=2,
+        height=height,
+        aspect=aspect,
         legend_out=False,
         palette="Paired")
     chart.set_xticklabels(
@@ -105,7 +105,7 @@ def output_to_png(fig, name):
 # Populates and Returns a List of Category, Classification and Frequency to Build a Dataframe:
 # Category Specifies University, Course, Year,
 # Level Specifies Primary or Secondary
-def get_secondary_pop_lists(item_list, category, level):
+def get_pop_lists(item_list, category, level):
     c = open_sqlite()
 
     # Collate the Query Data into the Following Lists:
@@ -113,11 +113,11 @@ def get_secondary_pop_lists(item_list, category, level):
     frequency = []
     item_column = []
     if level == 1:
-        word_list = primary_query_words
+        word_list = analysis_module.primary_query_words
         class_1 = "A1"
         class_2 = "B1"
     elif level == 2:
-        word_list = secondary_query_words
+        word_list = analysis_module.secondary_query_words
         class_1 = "A2"
         class_2 = "B2"
 
@@ -247,7 +247,7 @@ def get_primary_popularity():
     # Collate the Query Data into the Following Lists:
     classification = []
     frequency = []
-    for word in primary_query_words:
+    for word in analysis_module.primary_query_words:
         query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails WHERE A1 = '{word}' or B1 = '{word}';"
         classification.append(word)
         for row in c.execute(query):
@@ -299,17 +299,15 @@ def get_secondary_popularity():
         class_list.append(word)
 
     for item in class_list:
-        # print("d", item)
         query_2 = f"SELECT SecondaryClassification FROM Classifications WHERE PrimaryClassification = '{item}';"
         for value in c.execute(query_2):
             word = str(value[0])
-            # print("e", word)
             if word in class_dic:
                 class_dic[word] += 1
             else:
                 class_dic[word] = 1
 
-    for word in secondary_query_words:
+    for word in analysis_module.secondary_query_words:
         if word != 'COMMON':
             query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails WHERE A2 = '{word}' or B2 = '{word}';"
             for row in c.execute(query):
@@ -353,7 +351,7 @@ def get_primary_popularity_per_university():
     uni_list = get_uni_list()
 
     # Collate the Query Data into the Following Lists:
-    result = get_secondary_pop_lists(uni_list, 1, 1)
+    result = get_pop_lists(uni_list, 1, 1)
 
     # Column Labels & Graph Title:
     x1_label = "Primary Classification"
@@ -364,7 +362,7 @@ def get_primary_popularity_per_university():
     stats = get_output(result, x1_label, x2_label)
 
     # Plot the Dataset:
-    get_barplot(stats, x1_label, x2_label, title)
+    get_barplot(stats, x1_label, x2_label, title, 8, 2)
 
     # Order the Dataset:
     stats.set_index(x1_label, inplace=True)
@@ -380,7 +378,7 @@ def get_secondary_popularity_per_university():
     uni_list = get_uni_list()
 
     # Collate the Query Data into the Following Lists:
-    result = get_secondary_pop_lists(uni_list, 1, 2)
+    result = get_pop_lists(uni_list, 1, 2)
 
     # Column Labels & Graph Title:
     x1_label = "Secondary Classification"
@@ -407,7 +405,7 @@ def get_primary_popularity_by_course():
     course_list = get_course_list()
 
     # Collate the Query Data into the Following Lists:
-    result = get_secondary_pop_lists(course_list, 2, 1)
+    result = get_pop_lists(course_list, 2, 1)
 
     # Column Labels & Graph Title:
     x1_label = "Primary Classification"
@@ -418,7 +416,7 @@ def get_primary_popularity_by_course():
     stats = get_output(result, x1_label, x2_label)
 
     # Plot the Dataset:
-    get_barplot(stats, x1_label, x2_label, title)
+    get_barplot(stats, x1_label, x2_label, title, 8, 2)
     get_heatmap(stats, x1_label, x2_label, title, 6, 9, True)
 
     # Order the dataset:
@@ -435,7 +433,7 @@ def get_secondary_popularity_by_course():
     course_list = get_course_list()
 
     # Collate the Query Data into the Following Lists:
-    result = get_secondary_pop_lists(course_list, 2, 2)
+    result = get_pop_lists(course_list, 2, 2)
 
     # Column Labels & Graph Title:
     x1_label = "Classification"
@@ -461,7 +459,7 @@ def get_primary_popularity_by_year():
     year_list = [1, 2, 3, 4]
 
     # Collate the Query Data into the Following Lists:
-    result = get_secondary_pop_lists(year_list, 3, 1)
+    result = get_pop_lists(year_list, 3, 1)
 
     # Column Labels & Graph Title:
     x1_label = "Primary Classification"
@@ -472,7 +470,7 @@ def get_primary_popularity_by_year():
     stats = get_output(result, x1_label, x2_label)
 
     # Plot the Dataset:
-    get_barplot(stats, x1_label, x2_label, title)
+    get_barplot(stats, x1_label, x2_label, title, 8, 2)
     get_heatmap(stats, x1_label, x2_label, title, 10, 5, True)
 
     # Order the dataset:
@@ -488,7 +486,7 @@ def get_secondary_popularity_by_year():
     year_list = [1, 2, 3, 4]
 
     # Collate the Query Data into the Following Lists:
-    result = get_secondary_pop_lists(year_list, 3, 2)
+    result = get_pop_lists(year_list, 3, 2)
 
     # Column Labels & Graph Title:
     x1_label = "Secondary Classification"
@@ -514,7 +512,7 @@ def get_primary_popularity_by_core():
     core_list = ['TRUE', 'FALSE']
 
     # Collate the Query Data into the Following Lists:
-    result = get_secondary_pop_lists(core_list, 4, 1)
+    result = get_pop_lists(core_list, 4, 1)
 
     # Column Labels & Graph Title:
     x1_label = "Primary Classification"
@@ -525,7 +523,7 @@ def get_primary_popularity_by_core():
     stats = get_output(result, x1_label, x2_label)
 
     # Plot the Dataset:
-    get_barplot(stats, x1_label, x2_label, title)
+    get_barplot(stats, x1_label, x2_label, title, 8, 2)
     get_heatmap(stats, x1_label, x2_label, title, 10, 5, True)
 
     # Order the dataset:
@@ -541,19 +539,19 @@ def get_secondary_popularity_by_core():
     core_list = ['TRUE', 'FALSE']
 
     # Collate the Query Data into the Following Lists:
-    result = get_secondary_pop_lists(core_list, 4, 2)
+    result = get_pop_lists(core_list, 4, 2)
 
     # Column Labels & Graph Title:
-    x1_label = "Primary Classification"
+    x1_label = "Secondary Classification"
     x2_label = "Core"
-    title = "Primary Classification Popularity by Core and  Elective"
+    title = "Secondary Classification Popularity by Core and  Elective"
 
     # Get Dataset:
     stats = get_output(result, x1_label, x2_label)
 
     # Plot the Dataset:
-    get_barplot(stats, x1_label, x2_label, title)
-    get_heatmap(stats, x1_label, x2_label, title, 20, 5, True)
+    get_barplot(stats, x1_label, x2_label, title, 9, 2)
+    get_heatmap(stats, x1_label, x2_label, title, 20, 6, True)
 
     # Order the dataset:
     stats.set_index(x1_label, inplace=True)
@@ -596,7 +594,7 @@ def get_stats():
     output_to_file(s_core_stats)
 
 
-# get_stats()
+get_stats()
 # get_primary_popularity_per_university()
 # get_secondary_popularity_per_university()
 # get_primary_popularity_by_course()
