@@ -222,10 +222,21 @@ def get_pop_lists(item_list, category, level):
     return [item_column, classification, frequency]
 
 
-def get_uni_list():
+def get_region_list():
+    c = open_sqlite()
+    region_list = []
+    query = f"SELECT Country FROM Universities ORDER BY Country;"
+    for row in c.execute(query):
+        region_list.append(str(row[0]))
+    c.close()
+    return region_list
+
+
+def get_uni_list(region):
     c = open_sqlite()
     uni_list = []
-    query = f"SELECT UniversityName FROM Universities ORDER BY UniversityName;"
+    query = f"SELECT UniversityName FROM Universities " \
+            f"WHERE Country = '{region}' ORDER BY UniversityName;"
     for row in c.execute(query):
         uni_list.append(str(row[0]))
     c.close()
@@ -364,57 +375,64 @@ def get_secondary_popularity():
 
 
 def get_primary_popularity_per_university():
-    # Generate a List of Available Universities:
-    uni_list = get_uni_list()
+    # Generate a List of Available Regions:
+    region_list = get_region_list()
+    for region in region_list:
+        # Generate a List of Available Universities:
+        uni_list = get_uni_list(region)
 
-    # Collate the Query Data into the Following Lists:
-    result = get_pop_lists(uni_list, 1, 1)
+        # Collate the Query Data into the Following Lists:
+        result = get_pop_lists(uni_list, 1, 1)
 
-    # Column Labels & Graph Title:
-    x1_label = "Primary Classification"
-    x2_label = "University"
-    title = "Primary Classification Popularity by University"
+        # Column Labels & Graph Title:
+        x1_label = "Primary Classification"
+        x2_label = "University"
+        title = "Primary Classification Popularity by University"
 
-    # Get Dataset:
-    stats = get_output(result, x1_label, x2_label)
+        # Get Dataset:
+        stats = get_output(result, x1_label, x2_label)
 
-    # Plot the Dataset:
-    get_barplot(stats, x1_label, x2_label, title, 8, 2)
+        # Plot the Dataset:
+        get_barplot(stats, x1_label, x2_label, title, 8, 2)
 
-    # Order the Dataset:
-    stats.set_index(x1_label, inplace=True)
-    stats = stats.sort_values(by=y_label, ascending=False)
+        # Order the Dataset:
+        stats.set_index(x1_label, inplace=True)
+        stats = stats.sort_values(by=y_label, ascending=False)
 
-    print(stats)
+        print(stats)
 
-    return stats
+        return stats
 
 
 def get_secondary_popularity_per_university():
-    # Generate a List of Available Universities:
-    uni_list = get_uni_list()
+    # Generate a List of Available Regions:
+    region_list = get_region_list()
 
-    # Collate the Query Data into the Following Lists:
-    result = get_pop_lists(uni_list, 1, 2)
+    for region in region_list:
+        # Generate a List of Available Universities:
+        uni_list = get_uni_list(region)
 
-    # Column Labels & Graph Title:
-    x1_label = "Secondary Classification"
-    x2_label = "University"
-    title = "Secondary Classification Popularity by University"
+        # Collate the Query Data into the Following Lists:
+        result = get_pop_lists(uni_list, 1, 2)
 
-    # Get Dataset:
-    stats = get_output(result, x1_label, x2_label)
+        # Column Labels & Graph Title:
+        x1_label = "Secondary Classification"
+        x2_label = "University"
+        title = "Secondary Classification Popularity by University"
 
-    # Plot the Dataset:
-    get_heatmap(stats, x1_label, x2_label, title, 20, 9, True)
+        # Get Dataset:
+        stats = get_output(result, x1_label, x2_label)
 
-    # Order the dataset:
-    stats.set_index(x1_label, inplace=True)
-    stats = stats.sort_values(by=y_label, ascending=False)
+        # Plot the Dataset:
+        get_heatmap(stats, x1_label, x2_label, title, 20, 9, True)
 
-    print(stats)
+        # Order the dataset:
+        stats.set_index(x1_label, inplace=True)
+        stats = stats.sort_values(by=y_label, ascending=False)
 
-    return stats
+        print(stats)
+
+        return stats
 
 
 def get_primary_popularity_by_course():
