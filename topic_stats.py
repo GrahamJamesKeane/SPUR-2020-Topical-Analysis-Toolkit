@@ -20,13 +20,19 @@ def open_sqlite():
 def get_simple_barplot(data, x_label, title):
     plt.figure(figsize=(24, 10))
     sns.set_style("whitegrid")
-    chart = sns.catplot(x=f"{x_label}", y=f"{y_label}", data=data, kind='bar', height=8, aspect=2)
+    chart = sns.catplot(
+        x=f"{x_label}",
+        y=f"{y_label}",
+        data=data,
+        kind='bar',
+        height=8,
+        aspect=2,
+        palette="Paired")
     chart.set_xticklabels(
         rotation=45,
         horizontalalignment='right',
         fontweight='book',
         fontsize='small')
-    # chart.set_title(query_selection)
     plt.title(title)
     # plt.show()
     output_to_png(chart, title)
@@ -44,7 +50,14 @@ def get_heatmap(stats, x1_label, x2_label, title, width, height, annot):
     stats_2 = stats.pivot(x2_label, x1_label, y_label)
     # shape = stats_2.shape
     f, ax = plt.subplots(figsize=(width, height))
-    g = sns.heatmap(stats_2, square=True, ax=ax, cbar_kws={'fraction': 0.01}, annot=annot, fmt='d')
+    g = sns.heatmap(
+        stats_2,
+        square=True,
+        ax=ax,
+        cbar_kws={'fraction': 0.01},
+        annot=annot,
+        fmt='d',
+        cmap='OrRd')
     g.set_xticklabels(
         g.get_xticklabels(),
         rotation=45,
@@ -90,7 +103,11 @@ def get_barplot(stats, x1_label, x2_label, title, height, aspect):
         fontweight='book',
         fontsize='small')
     plt.title(title, fontdict=font)
-    plt.legend(title=x2_label, bbox_to_anchor=(1, 1), loc=2, borderaxespad=0.)
+    plt.legend(
+        title=x2_label,
+        bbox_to_anchor=(1, 1),
+        loc=2,
+        borderaxespad=0.)
     # plt.show()
     output_to_png(chart, title)
     plt.close()
@@ -509,7 +526,7 @@ def get_secondary_popularity_by_year():
 
 
 def get_primary_popularity_by_core():
-    core_list = ['TRUE', 'FALSE']
+    core_list = ['CORE', 'ELECTIVE']
 
     # Collate the Query Data into the Following Lists:
     result = get_pop_lists(core_list, 4, 1)
@@ -517,7 +534,7 @@ def get_primary_popularity_by_core():
     # Column Labels & Graph Title:
     x1_label = "Primary Classification"
     x2_label = "Core"
-    title = "Primary Classification Popularity by Core and Elective"
+    title = "Primary Classification Popularity by Core and Elective Modules"
 
     # Get Dataset:
     stats = get_output(result, x1_label, x2_label)
@@ -536,7 +553,7 @@ def get_primary_popularity_by_core():
 
 
 def get_secondary_popularity_by_core():
-    core_list = ['TRUE', 'FALSE']
+    core_list = ['CORE', 'ELECTIVE']
 
     # Collate the Query Data into the Following Lists:
     result = get_pop_lists(core_list, 4, 2)
@@ -544,7 +561,7 @@ def get_secondary_popularity_by_core():
     # Column Labels & Graph Title:
     x1_label = "Secondary Classification"
     x2_label = "Core"
-    title = "Secondary Classification Popularity by Core and  Elective"
+    title = "Secondary Classification Popularity by Core and  Elective Modules"
 
     # Get Dataset:
     stats = get_output(result, x1_label, x2_label)
@@ -592,7 +609,6 @@ def get_stats():
     s_core_stats = get_secondary_popularity_by_core()
     output_to_file(p_core_stats)
     output_to_file(s_core_stats)
-
 
 # get_stats()
 # get_primary_popularity_per_university()
