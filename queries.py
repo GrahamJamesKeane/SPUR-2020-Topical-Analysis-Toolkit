@@ -175,10 +175,10 @@ def transfer_to_df(data, length):
     return category_keyword_df
 
 
-def output_to_file(category_keyword_df):
+def output_to_file(database, filename):
     stamp = str(datetime.today()).replace(":", ".")
-    file_name = f"Output_files/all_classifications_{stamp}.csv"
-    category_keyword_df.to_csv(file_name)
+    file_name = f"Output_files/{filename}_{stamp}.csv"
+    database.to_csv(file_name)
 
 
 # Returns categorical keywords and their frequency with all associated classifications
