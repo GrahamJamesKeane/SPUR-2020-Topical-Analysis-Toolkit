@@ -156,7 +156,7 @@ def get_data(category, name, label, data, column, location):
                 length = 10
             elif length > 100:
                 length = 100
-            filename = f"Primary_MT_Keywords_Core_{key}"
+            filename = f"Primary_{column}_Keywords_Core_{key}"
             get_word_cloud(keyword_frequency, title, length, location, filename)
 
         # Add keys, keywords, and frequency to dictionary:
