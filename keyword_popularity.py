@@ -119,7 +119,9 @@ def build_dictionary(key, data, keyword_frequency, name, category, label):
 def get_data(category, name, label, data, column, location):
     title = None
     query = None
+    print("flag 1")
     for key in primary_query_words:
+        print("flag 2")
         if category == 1:
             title = f"{key} TITLE KEYWORDS"
             query = f"SELECT {column} FROM ModuleDetails WHERE A1 = '{key}' or B1 = '{key}';"
@@ -139,14 +141,14 @@ def get_data(category, name, label, data, column, location):
                       f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
                       f"WHERE Core = '{name}' AND (ModuleDetails.A1 = '{key}' " \
                       f"or ModuleDetails.B1 = '{key}');"
-
+        print("flag 3")
         # Get a list of keywords:
         keyword_list = process_keywords(query)
         # print(keyword_list)
-
+        print("flag 4")
         # Return the frequency of unique Keywords:
         keyword_frequency = dict(get_count(keyword_list))
-
+        print("flag 5")
         # Get a wordcloud of the keywords:
         # keyword_string = ' '.join(keyword_list)
 
@@ -154,14 +156,14 @@ def get_data(category, name, label, data, column, location):
         if length > 1:
             if length < 10:
                 length = 10
-            elif length > 100:
-                length = 100
-            filename = f"Primary_MT_Keywords_Core_{key}"
+            elif length > 50:
+                length = 50
+            filename = f"Primary_{column}_Keywords_Core_{key}"
             get_word_cloud(keyword_frequency, title, length, location, filename)
-
+        print("flag 6")
         # Add keys, keywords, and frequency to dictionary:
         data = build_dictionary(key, data, keyword_frequency, name, category, label)
-
+    print("flag 7")
     return data
 
 
@@ -269,7 +271,7 @@ def get_primary_keywords_module_title_core():
 def get_primary_keywords_overview():
     data = {"Classification": [], "Keyword": [], "Frequency": []}
     location = "Keyword_Analysis/Overview/All"
-
+    print("flag 1")
     data = get_data(
         category=1,
         name=None,
