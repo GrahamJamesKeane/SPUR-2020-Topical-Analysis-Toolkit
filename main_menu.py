@@ -1,4 +1,4 @@
-from filters_and_organisation import select_filters
+from keyword_popularity import modules_all, overview_all, learning_outcomes_all
 from topic_stats import get_stats
 
 
@@ -19,11 +19,11 @@ def menu():
     5: Exit
     """))
             if user_input_2 == 1:
-                select_filters("ModuleTitle")
+                modules_all()
             elif user_input_2 == 2:
-                select_filters("Overview")
+                overview_all()
             elif user_input_2 == 3:
-                select_filters("LearningOutcomes")
+                learning_outcomes_all()
             elif user_input_2 == 4:
                 menu()
                 return

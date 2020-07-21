@@ -6,7 +6,10 @@
       <w>darkgrid</w>
       <w>dataframe</w>
       <w>heatmap</w>
+      <w>lemmatizer</w>
       <w>whitegrid</w>
+      <w>wordcloud</w>
+      <w>wordnet</w>
     </words>
   </dictionary>
 </component>

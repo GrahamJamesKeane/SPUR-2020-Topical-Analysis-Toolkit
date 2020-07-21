@@ -1,20 +1,13 @@
 import pandas as pd
-import sqlite3
 import matplotlib.pyplot as plt
 import seaborn as sns
-import analysis_module
-from datetime import datetime
 
-from queries import output_to_file
+from common_elements import output_to_png, open_sqlite, primary_query_words, secondary_query_words, output_to_csv, \
+    get_uni_list, get_region_list, get_course_list
 
 y_label = "Frequency"
 z_label = "Primary Classification"
-
-
-def open_sqlite():
-    conn = sqlite3.connect('TEST_DB_SPUR.db')
-    c = conn.cursor()
-    return c
+location = "Topic_stats"
 
 
 # Graphing functions:
@@ -36,7 +29,7 @@ def get_simple_barplot(data, x_label, title):
         fontsize='small')
     plt.title(title)
     # plt.show()
-    output_to_png(chart, title)
+    output_to_png(chart, title, location)
     plt.close('all')
 
 
@@ -73,7 +66,7 @@ def get_heatmap(stats, x1_label, x2_label, title, width, height, annot):
     ax.set_ylabel('')
     ax.set_xlabel('')
     # plt.show()
-    output_to_png(f, title)
+    output_to_png(f, title, location)
     plt.close('all')
 
 
@@ -108,14 +101,8 @@ def get_barplot(stats, x1_label, x2_label, title, height, aspect):
         loc=2,
         borderaxespad=0.)
     # plt.show()
-    output_to_png(chart, title)
+    output_to_png(chart, title, location)
     plt.close('all')
-
-
-def output_to_png(fig, name):
-    stamp = str(datetime.today()).replace(":", ".")
-    file_name = f"Output_files/{name}_{stamp}.png"
-    fig.savefig(file_name)
 
 
 # Populates and Returns a List of Category, Classification and Frequency to Build a Dataframe:
@@ -129,12 +116,15 @@ def get_pop_lists(item_list, category, level):
     p_classification = []
     frequency = []
     item_column = []
+    key_list = []
+    class_1 = None
+    class_2 = None
     if level == 1:
-        word_list = analysis_module.primary_query_words
+        key_list = primary_query_words
         class_1 = "A1"
         class_2 = "B1"
     elif level == 2:
-        word_list = analysis_module.secondary_query_words
+        key_list = secondary_query_words
         class_1 = "A2"
         class_2 = "B2"
 
@@ -143,6 +133,7 @@ def get_pop_lists(item_list, category, level):
         class_list = []
 
         if level == 2:
+            query_a1 = query_b1 = None
             # Where secondary classification is COMMON, add the subclasses of the primary classification to the count:
             if category == 1:  # University:
                 query_a1 = f"SELECT A1 FROM ModuleDetails WHERE UniversityName = '{item}' AND A2 = 'COMMON';"
@@ -187,32 +178,33 @@ def get_pop_lists(item_list, category, level):
                     else:
                         class_dic[word] = 1
 
-        for word in word_list:
-            if word != 'COMMON':
+        for key in key_list:
+            query_3 = None
+            if key != 'COMMON':
                 if category == 1:  # University:
                     query_3 = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails " \
-                              f"WHERE UniversityName = '{item}' AND {class_1} = '{word}' or {class_2} = '{word}';"
+                              f"WHERE UniversityName = '{item}' AND {class_1} = '{key}' or {class_2} = '{key}';"
                 elif category == 2:  # Course:
                     query_3 = f"SELECT COUNT(CourseDetails.ModuleCode) FROM CourseDetails INNER JOIN ModuleDetails " \
                               f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                              f"WHERE CourseCode = '{item}' AND (ModuleDetails.{class_1} = '{word}' " \
-                              f"or ModuleDetails.{class_2} = '{word}');"
+                              f"WHERE CourseCode = '{item}' AND (ModuleDetails.{class_1} = '{key}' " \
+                              f"or ModuleDetails.{class_2} = '{key}');"
                 elif category == 3:  # Year Offered
                     query_3 = f"SELECT COUNT(CourseDetails.ModuleCode) FROM CourseDetails INNER JOIN ModuleDetails " \
                               f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                              f"WHERE YearOffered = {item} AND (ModuleDetails.{class_1} = '{word}' " \
-                              f"or ModuleDetails.{class_2} = '{word}');"
+                              f"WHERE YearOffered = {item} AND (ModuleDetails.{class_1} = '{key}' " \
+                              f"or ModuleDetails.{class_2} = '{key}');"
                 elif category == 4:  # Core:
                     query_3 = f"SELECT COUNT(CourseDetails.ModuleCode) FROM CourseDetails INNER JOIN ModuleDetails " \
                               f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                              f"WHERE Core = '{item}' AND (ModuleDetails.{class_1} = '{word}' " \
-                              f"or ModuleDetails.{class_2} = '{word}');"
+                              f"WHERE Core = '{item}' AND (ModuleDetails.{class_1} = '{key}' " \
+                              f"or ModuleDetails.{class_2} = '{key}');"
 
                 for row in c.execute(query_3):
-                    if word in class_dic:
-                        class_dic[word] += row[0]
+                    if key in class_dic:
+                        class_dic[key] += row[0]
                     else:
-                        class_dic[word] = row[0]
+                        class_dic[key] = row[0]
 
         for key, value in class_dic.items():
             frequency.append(value)
@@ -237,40 +229,10 @@ def get_pop_lists(item_list, category, level):
         return [item_column, s_classification, p_classification, frequency]
 
 
-def get_region_list():
-    c = open_sqlite()
-    region_list = []
-    query = f"SELECT Country FROM Universities ORDER BY Country;"
-    for row in c.execute(query):
-        region_list.append(str(row[0]))
-    c.close()
-    return region_list
-
-
-def get_uni_list(region):
-    c = open_sqlite()
-    uni_list = []
-    query = f"SELECT UniversityName FROM Universities " \
-            f"WHERE Country = '{region}' ORDER BY UniversityName;"
-    for row in c.execute(query):
-        uni_list.append(str(row[0]))
-    c.close()
-    return uni_list
-
-
-def get_course_list():
-    c = open_sqlite()
-    course_list = []
-    query = f"SELECT CourseCode FROM CourseList ORDER BY CourseCode;"
-    for row in c.execute(query):
-        course_list.append(str(row[0]))
-    c.close()
-    return course_list
-
-
 # Transform Query Output into Dataframe
 def get_output(result, label_1, label_2, level):
     # Generate Query Output Dictionary:
+    stats_d = {}
     if level == 1:
         stats_d = {label_2: result[0], label_1: result[1], y_label: result[2]}
     elif level == 2:
@@ -297,7 +259,7 @@ def get_primary_popularity_by_module():
     # Collate the Query Data into the Following Lists:
     classification = []
     frequency = []
-    for word in analysis_module.primary_query_words:
+    for word in primary_query_words:
         query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails WHERE A1 = '{word}' or B1 = '{word}';"
         classification.append(word)
         for row in c.execute(query):
@@ -324,8 +286,11 @@ def get_primary_popularity_by_module():
     stats = stats.sort_values(by=y_label, ascending=False)
 
     print(stats)
-    output_to_file(stats, title)
+
+    output_to_csv(stats, title, location)
+
     c.close()
+
     return stats
 
 
@@ -355,7 +320,8 @@ def get_primary_popularity_per_university():
         stats = stats.sort_values(by=[x2_label, y_label], ascending=False).reset_index(drop=True)
 
         print(stats)
-        output_to_file(stats, title)
+
+        output_to_csv(stats, title, location)
 
         return stats
 
@@ -384,7 +350,7 @@ def get_primary_popularity_by_course():
 
     print(stats)
 
-    output_to_file(stats, title)
+    output_to_csv(stats, title, location)
 
     return stats
 
@@ -412,7 +378,7 @@ def get_primary_popularity_by_year():
 
     print(stats)
 
-    output_to_file(stats, title)
+    output_to_csv(stats, title, location)
 
     return stats
 
@@ -440,7 +406,7 @@ def get_primary_popularity_by_core():
 
     print(stats)
 
-    output_to_file(stats, title)
+    output_to_csv(stats, title)
 
     return stats
 
@@ -477,7 +443,7 @@ def get_secondary_popularity_by_module():
             else:
                 class_dic[word] = 1
 
-    for word in analysis_module.secondary_query_words:
+    for word in secondary_query_words:
         if word != 'COMMON':
             query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails WHERE A2 = '{word}' or B2 = '{word}';"
             for row in c.execute(query):
@@ -512,9 +478,10 @@ def get_secondary_popularity_by_module():
 
     print(stats)
 
-    output_to_file(stats, title)
+    output_to_csv(stats, title, location)
 
     c.close()
+
     return stats
 
 
@@ -564,7 +531,7 @@ def get_secondary_popularity_per_university():
         widths = [15, 13, 11, 10, 10, 13, 11, 11, 10, 11, 11, 11, 10, 8]
         heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
         for df in cat_split:
-            title = f"{analysis_module.primary_query_words[i]} Subcategory Popularity by University"
+            title = f"{primary_query_words[i]} Subcategory Popularity by University"
             get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True)
             i += 1
 
@@ -573,7 +540,7 @@ def get_secondary_popularity_per_university():
 
         print(stats)
 
-        output_to_file(stats, title)
+        output_to_csv(stats, title, location)
 
         return stats
 
@@ -593,7 +560,7 @@ def get_secondary_popularity_by_course():
     title_2 = "Secondary Classification Popularity by Course L-Z"
 
     # Get Dataset:
-    stats = get_output(result, x1_label, x2_label,2)
+    stats = get_output(result, x1_label, x2_label, 2)
 
     # Order By Sub-Category & Rest Index:
     stats = stats.sort_values(by=x1_label).reset_index(drop=True)
@@ -621,7 +588,7 @@ def get_secondary_popularity_by_course():
     widths = [14, 14, 10, 10, 10, 12, 12, 12, 10, 11, 12, 12, 10, 10]
     heights = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
     for df in cat_split:
-        title = f"{analysis_module.primary_query_words[i]} Subcategory Popularity by Course"
+        title = f"{primary_query_words[i]} Subcategory Popularity by Course"
         get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True)
         i += 1
 
@@ -630,7 +597,7 @@ def get_secondary_popularity_by_course():
 
     print(stats)
 
-    output_to_file(stats, title)
+    output_to_csv(stats, title, location)
 
     return stats
 
@@ -678,7 +645,7 @@ def get_secondary_popularity_by_year():
     widths = [15, 13, 11, 10, 10, 13, 11, 11, 10, 11, 11, 11, 10, 8]
     heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
     for df in cat_split:
-        title = f"{analysis_module.primary_query_words[i]} Subcategory Popularity by Year"
+        title = f"{primary_query_words[i]} Subcategory Popularity by Year"
         get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True)
         get_barplot(df, x1_label, x2_label, title, 8, 2)
         i += 1
@@ -688,7 +655,7 @@ def get_secondary_popularity_by_year():
 
     print(stats)
 
-    output_to_file(stats, title)
+    output_to_csv(stats, title, location)
 
     return stats
 
@@ -736,7 +703,7 @@ def get_secondary_popularity_by_core():
     widths = [15, 13, 11, 10, 10, 13, 11, 11, 10, 11, 11, 11, 10, 8]
     heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
     for df in cat_split:
-        title = f"{analysis_module.primary_query_words[i]} Subcategory Popularity by Core and  Elective Modules"
+        title = f"{primary_query_words[i]} Subcategory Popularity by Core and  Elective Modules"
         get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True)
         get_barplot(df, x1_label, x2_label, title, 8, 2)
         i += 1
@@ -746,7 +713,7 @@ def get_secondary_popularity_by_core():
 
     print(stats)
 
-    output_to_file(stats, title)
+    output_to_csv(stats, title, location)
 
     return stats
 
@@ -773,6 +740,4 @@ def get_stats():
     get_primary_popularity_by_core()
     get_secondary_popularity_by_core()
 
-
-get_stats()
-
+# get_stats()
