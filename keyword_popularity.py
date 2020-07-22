@@ -123,7 +123,6 @@ def get_data(category, name, label, data, column, location):
     title = None
     query = None
     for key in primary_query_words:
-        print("flag 2")
         if category == 1:
             title = f"{key} TITLE KEYWORDS"
             query = f"SELECT {column} FROM ModuleDetails WHERE A1 = '{key}' or B1 = '{key}';"
