@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from nltk import WordNetLemmatizer
 from wordcloud import WordCloud
 from common_elements import excluded_words, primary_query_words, open_sqlite, output_to_csv, get_region_list, \
-    get_uni_list, output_to_png
+    get_uni_list
 from nltk.corpus import wordnet
 
 # Set Pandas options to view all entries:
@@ -17,16 +17,11 @@ pd.set_option('display.width', None)
 pd.set_option('display.max_colwidth', None)
 
 
+# Returns a wordcloud image based on the keyword frequency set provided:
 def get_word_cloud(keywords, title, length, location, filename):
-    if length < 5:
-        length = 5
     pattern = re.compile(r'\w[\w\-\']+')
-    font = {'family': 'Arial',
-            'color': 'white',
-            'weight': 'bold',
-            'size': length * 1.5,
-            }
-    wordcloud = WordCloud(width=(length * 100), height=(length * 100),
+
+    wordcloud = WordCloud(width=(length * 10), height=(length * 10),
                           background_color='black',
                           min_font_size=10,
                           regexp=pattern,
@@ -37,17 +32,19 @@ def get_word_cloud(keywords, title, length, location, filename):
     plt.figure(figsize=(length, length), facecolor='black')
     plt.imshow(wordcloud)
     plt.axis("off")
-    plt.title(title, fontdict=font)
     plt.figure(constrained_layout=True)
+
+    # Output to File:
     stamp = str(datetime.today()).replace(":", ".")
     file_name = f"Output_files/{location}/{filename}_{stamp}.png"
     wordcloud.to_file(file_name)
-    # plt.show()
+    # plt.show()  # Only required for testing
     plt.close('all')
 
 
+# Map POS tag to first character lemmatize() accepts: the tag is required for the function to find the root of a given
+# word
 def get_wordnet_pos(word):
-    """Map POS tag to first character lemmatize() accepts"""
     tag = nltk.pos_tag([word])[0][1][0].upper()
     tag_dict = {"J": wordnet.ADJ,
                 "N": wordnet.NOUN,
@@ -78,7 +75,7 @@ def clean_data(text):
     return keyword_list
 
 
-# Takes a keyword list as a parameter and returns a dictionary of unique keyword frequencies:
+# Takes a keyword list as a parameter and returns a dictionary of unique keyword frequencies for get_data():
 def get_count(keyword_list):
     count = Counter()
     for word in keyword_list:
@@ -86,7 +83,7 @@ def get_count(keyword_list):
     return count
 
 
-# Takes a query as a parameter and returns a keyword list which has been cleaned:
+# Takes a query as a parameter and returns a keyword list which has been cleaned for get_data():
 def process_keywords(query):
     c = open_sqlite()
     keyword_list = []
@@ -96,6 +93,7 @@ def process_keywords(query):
     return keyword_list
 
 
+# Dictionary constructor for get_data():
 def build_dictionary(key, data, keyword_frequency, name, category, label):
     item = []
     cat = []
@@ -116,10 +114,14 @@ def build_dictionary(key, data, keyword_frequency, name, category, label):
     return data
 
 
+# Selectively executes the parameters of each keyword function and returns a dictionary:
+# For each set of parameters given, the function iterates through the list of primary classifications and
+# generates a query for each classification. The information is cleaned and then a frequency table of unique
+# keywords generated. The frequency table is sent to the wordcloud generator after which the function constructs
+# a dictionary for the purpose of transferring the data to a Dataframe.
 def get_data(category, name, label, data, column, location):
     title = None
     query = None
-    print("flag 1")
     for key in primary_query_words:
         print("flag 2")
         if category == 1:
@@ -138,20 +140,17 @@ def get_data(category, name, label, data, column, location):
         elif category == 4:
             title = f"{name} {key} TITLE KEYWORDS"
             query = f"SELECT ModuleDetails.{column} FROM ModuleDetails INNER JOIN CourseDetails " \
-                      f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                      f"WHERE Core = '{name}' AND (ModuleDetails.A1 = '{key}' " \
-                      f"or ModuleDetails.B1 = '{key}');"
-        print("flag 3")
+                    f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
+                    f"WHERE Core = '{name}' AND (ModuleDetails.A1 = '{key}' " \
+                    f"or ModuleDetails.B1 = '{key}');"
+
         # Get a list of keywords:
         keyword_list = process_keywords(query)
-        # print(keyword_list)
-        print("flag 4")
+
         # Return the frequency of unique Keywords:
         keyword_frequency = dict(get_count(keyword_list))
-        print("flag 5")
-        # Get a wordcloud of the keywords:
-        # keyword_string = ' '.join(keyword_list)
 
+        # Get a wordcloud of the keywords:
         length = len(keyword_frequency)
         if length > 1:
             if length < 10:
@@ -160,17 +159,21 @@ def get_data(category, name, label, data, column, location):
                 length = 50
             filename = f"Primary_{column}_Keywords_Core_{key}"
             get_word_cloud(keyword_frequency, title, length, location, filename)
-        print("flag 6")
+
         # Add keys, keywords, and frequency to dictionary:
         data = build_dictionary(key, data, keyword_frequency, name, category, label)
-    print("flag 7")
+
     return data
 
+
+# The following functions set-out the parameters necessary to view keyword frequencies based on classification
+# for the ModuleTitle, Overview, and LearningOutcomes columns of the database:
 
 # Primary by Modules:
 def get_primary_keywords_module_title():
     data = {"Classification": [], "Keyword": [], "Frequency": []}
     location = "Keyword_Analysis/ModuleTitle/All"
+
     data = get_data(
         category=1,
         name=None,
@@ -186,13 +189,14 @@ def get_primary_keywords_module_title():
     filename = "Primary_MT_Keywords"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 def get_primary_keywords_module_title_uni():
     label = "University"
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Keyword_Analysis/ModuleTitle/University"
+
     # Generate a List of Available Regions:
     region_list = get_region_list()
 
@@ -216,7 +220,7 @@ def get_primary_keywords_module_title_uni():
     filename = f"Primary_MT_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 def get_primary_keywords_module_title_year():
@@ -240,7 +244,7 @@ def get_primary_keywords_module_title_year():
     filename = f"Primary_MT_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 def get_primary_keywords_module_title_core():
@@ -264,7 +268,7 @@ def get_primary_keywords_module_title_core():
     # Output to File:
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 # Primary by Overview:
@@ -287,7 +291,7 @@ def get_primary_keywords_overview():
     filename = "Primary_OV_Keywords"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 def get_primary_keywords_overview_uni():
@@ -317,7 +321,7 @@ def get_primary_keywords_overview_uni():
     filename = f"Primary_OV_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 def get_primary_keywords_overview_year():
@@ -342,7 +346,7 @@ def get_primary_keywords_overview_year():
     filename = f"Primary_OV_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 def get_primary_keywords_overview_core():
@@ -367,7 +371,7 @@ def get_primary_keywords_overview_core():
     filename = f"Primary_OV_Keywords_Core"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 # Primary by Learning Outcomes:
@@ -390,7 +394,7 @@ def get_primary_keywords_learning_outcomes():
     filename = "Primary_LO_Keywords"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 def get_primary_keywords_learning_outcomes_uni():
@@ -421,7 +425,7 @@ def get_primary_keywords_learning_outcomes_uni():
     filename = f"Primary_LO_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 def get_primary_keywords_learning_outcomes_year():
@@ -446,7 +450,7 @@ def get_primary_keywords_learning_outcomes_year():
     filename = f"Primary_LO_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
 def get_primary_keywords_learning_outcomes_core():
@@ -471,21 +475,25 @@ def get_primary_keywords_learning_outcomes_core():
     filename = f"Primary_LO_Keywords_Core"
     output_to_csv(primary_keywords, filename, location)
 
-    # print(primary_keywords)
+    # print(primary_keywords)  # Only required for testing
 
 
+# Secondary by Modules:
 def get_secondary_keywords_module_title():
     pass
 
 
+# Secondary by Overview:
 def get_secondary_keywords_overview():
     pass
 
 
+# Secondary by Learning Outcomes:
 def get_secondary_keywords_learning_outcomes():
     pass
 
 
+# Master Functions:
 def modules_all():
     # Primary by Modules:
     get_primary_keywords_module_title()
@@ -494,7 +502,7 @@ def modules_all():
     get_primary_keywords_module_title_core()
 
     # Secondary by Module:
-    # get_secondary_keywords_module_title()
+    # get_secondary_keywords_module_title()  # Not yet available
 
 
 def overview_all():
@@ -505,7 +513,7 @@ def overview_all():
     get_primary_keywords_overview_core()
 
     # Secondary by Overview:
-    # get_secondary_keywords_overview()
+    # get_secondary_keywords_overview()  # Not yet available
 
 
 def learning_outcomes_all():
@@ -516,9 +524,9 @@ def learning_outcomes_all():
     get_primary_keywords_learning_outcomes_core()
 
     # Secondary by Learning Outcomes:
-    # get_secondary_keywords_learning_outcomes()
+    # get_secondary_keywords_learning_outcomes()  # Not yet available
 
 
-# modules_all()
-overview_all()
-# learning_outcomes_all()
+# modules_all()  # Only required for testing
+# overview_all()  # Only required for testing
+# learning_outcomes_all()  # Only required for testing

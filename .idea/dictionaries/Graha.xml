@@ -6,6 +6,7 @@
       <w>darkgrid</w>
       <w>dataframe</w>
       <w>heatmap</w>
+      <w>lemmatize</w>
       <w>lemmatizer</w>
       <w>whitegrid</w>
       <w>wordcloud</w>
