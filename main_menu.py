@@ -1,12 +1,15 @@
 from keyword_popularity import modules_all, overview_all, learning_outcomes_all
 from topic_stats import get_stats
+import time
 
 message_1 = "Initialising... Please Wait"
 message_2 = "Process Complete"
 
+start_time = time.time()
+
 
 # Start here:
-def menu():
+def main():
     while True:
         user_input_1 = int(input("""    Main Menu
     1: Keyword Analysis
@@ -35,7 +38,7 @@ def menu():
                 learning_outcomes_all()
                 print(message_2)
             elif user_input_2 == 4:
-                menu()
+                main()
                 return
             elif user_input_2 == 5:
                 exit(0)
@@ -54,4 +57,5 @@ def menu():
             exit(0)
 
 
-menu()
+main()
+print("Total Process Time", "--- %s seconds ---" % (time.time() - start_time))

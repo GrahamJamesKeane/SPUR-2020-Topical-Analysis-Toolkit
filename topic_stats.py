@@ -1,17 +1,24 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import time
 from common_elements import output_to_png, open_sqlite, primary_query_words, secondary_query_words, output_to_csv, \
     get_uni_list, get_region_list, get_course_list
 
 y_label = "Frequency"
 z_label = "Primary Classification"
-location = "Topic_stats"
+
+message_1 = "Fetching Popularity Data..."
+message_2 = "Building Query..."
+message_3 = "Generating Dictionary..."
+message_4 = "Transferring to Dataframe..."
+message_5 = "Generating Figure..."
+message_6 = "Saving to File..."
 
 
 # Graphing functions:
-def get_simple_barplot(data, x_label, title):
+def get_simple_barplot(data, x_label, title, location):
+    print(message_5)
     plt.figure(figsize=(24, 10))
     sns.set_style("whitegrid")
     chart = sns.catplot(
@@ -28,12 +35,14 @@ def get_simple_barplot(data, x_label, title):
         fontweight='book',
         fontsize='small')
     plt.title(title)
+    plt.figure(constrained_layout=True)
     # plt.show()  # Only required for testing
     output_to_png(chart, title, location)
     plt.close('all')
 
 
-def get_heatmap(stats, x1_label, x2_label, title, width, height, annot):
+def get_heatmap(stats, x1_label, x2_label, title, width, height, annot, location):
+    print(message_5)
     sns.set()
     font = {'family': 'serif',
             'color': 'black',
@@ -65,12 +74,14 @@ def get_heatmap(stats, x1_label, x2_label, title, width, height, annot):
     plt.title(title, fontdict=font)
     ax.set_ylabel('')
     ax.set_xlabel('')
+    plt.figure(constrained_layout=True)
     # plt.show()  # Only required for testing
     output_to_png(f, title, location)
     plt.close('all')
 
 
-def get_barplot(stats, x1_label, x2_label, title, height, aspect):
+def get_barplot(stats, x1_label, x2_label, title, height, aspect, location):
+    print(message_5)
     font = {'family': 'serif',
             'color': 'black',
             'weight': 'normal',
@@ -100,6 +111,7 @@ def get_barplot(stats, x1_label, x2_label, title, height, aspect):
         bbox_to_anchor=(1, 1),
         loc=2,
         borderaxespad=0.)
+    plt.figure(constrained_layout=True)
     # plt.show()  # Only required for testing
     output_to_png(chart, title, location)
     plt.close('all')
@@ -131,7 +143,7 @@ def get_pop_lists(item_list, category, level):
     for item in item_list:
         class_dic = {}
         class_list = []
-
+        print(message_2)
         if level == 2:
             query_a1 = query_b1 = None
             # Where secondary classification is COMMON, add the subclasses of the primary classification to the count:
@@ -159,7 +171,7 @@ def get_pop_lists(item_list, category, level):
                 query_b1 = f"SELECT ModuleDetails.B1 FROM ModuleDetails INNER JOIN CourseDetails " \
                            f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
                            f"WHERE Core = '{item}' AND ModuleDetails.B2 = 'COMMON';"
-
+            print(message_3)
             for row in c.execute(query_a1):
                 word = str(row[0])
                 class_list.append(word)
@@ -179,6 +191,7 @@ def get_pop_lists(item_list, category, level):
                         class_dic[word] = 1
 
         for key in key_list:
+            print(message_2)
             query_3 = None
             if key != 'COMMON':
                 if category == 1:  # University:
@@ -199,7 +212,7 @@ def get_pop_lists(item_list, category, level):
                               f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
                               f"WHERE Core = '{item}' AND (ModuleDetails.{class_1} = '{key}' " \
                               f"or ModuleDetails.{class_2} = '{key}');"
-
+                print(message_3)
                 for row in c.execute(query_3):
                     if key in class_dic:
                         class_dic[key] += row[0]
@@ -231,12 +244,16 @@ def get_pop_lists(item_list, category, level):
 
 # Transform Query Output into Dataframe
 def get_output(result, label_1, label_2, level):
+    print(message_3)
+
     # Generate Query Output Dictionary:
     stats_d = {}
     if level == 1:
         stats_d = {label_2: result[0], label_1: result[1], y_label: result[2]}
     elif level == 2:
         stats_d = {label_2: result[0], label_1: result[1], z_label: result[2], y_label: result[3]}
+
+    print(message_4)
 
     # Generate Data-frame from Dictionary:
     stats = pd.DataFrame.from_dict(stats_d)
@@ -254,24 +271,30 @@ def get_output(result, label_1, label_2, level):
 # The Following Functions Describe the Popularity of Primary ACM Classifications in Terms of the Frequency of
 # Selected Categorical Filters: Module, University, Course, Year, And Core
 def get_primary_popularity_by_module():
+    start_time = time.time()
+    print(message_1)
     c = open_sqlite()
 
     # Collate the Query Data into the Following Lists:
     classification = []
     frequency = []
+    print(message_2)
     for word in primary_query_words:
         query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails WHERE A1 = '{word}' or B1 = '{word}';"
         classification.append(word)
         for row in c.execute(query):
             frequency.append(row[0])
 
-    # Column Label & Graph Title:
+    # Column Label, Graph Title & Location:
     x_label = "Classification"
     title = "Primary Classification Popularity by Module"
+    location = "Topic_stats/Primary/Module"
 
+    print(message_3)
     # Generate Query Output Dictionary:
     stats_2d = {x_label: classification, y_label: frequency}
 
+    print(message_4)
     # Generate Data-Frame from Dictionary:
     stats = pd.DataFrame.from_dict(stats_2d)
 
@@ -279,7 +302,7 @@ def get_primary_popularity_by_module():
     stats[x_label] = stats[x_label].astype('category')
 
     # Plot the Dataset:
-    get_simple_barplot(stats, x_label, title)
+    get_simple_barplot(stats, x_label, title, location)
 
     # Order the Dataset:
     stats.set_index(x_label, inplace=True)
@@ -287,12 +310,18 @@ def get_primary_popularity_by_module():
 
     # print(stats)  # # Only required for testing
 
+    print(message_6)
     output_to_csv(stats, title, location)
 
     c.close()
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_popularity_per_university():
+    start_time = time.time()
+
+    print(message_1)
+
     # Generate a List of Available Regions:
     region_list = get_region_list()
     for region in region_list:
@@ -302,103 +331,131 @@ def get_primary_popularity_per_university():
         # Collate the Query Data into the Following Lists:
         result = get_pop_lists(uni_list, 1, 1)
 
-        # Column Labels & Graph Title:
+        # Column Label, Graph Title & Location:
         x1_label = "Primary Classification"
         x2_label = "University"
         title = "Primary Classification Popularity by University"
+        location = "Topic_stats/Primary/University"
 
         # Get Dataset:
         stats = get_output(result, x1_label, x2_label, 1)
 
         # Plot the Dataset:
-        get_barplot(stats, x1_label, x2_label, title, 8, 2)
-        get_heatmap(stats, x1_label, x2_label, title, 10, 11, True)
+        get_barplot(stats, x1_label, x2_label, title, 8, 2, location)
+        get_heatmap(stats, x1_label, x2_label, title, 14, 10, True, location)
 
         # Order the Dataset by Frequency:
         stats = stats.sort_values(by=[x2_label, y_label], ascending=False).reset_index(drop=True)
 
         # print(stats) # Only required for testing
 
+        print(message_6)
         output_to_csv(stats, title, location)
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_popularity_by_course():
+    start_time = time.time()
+
+    print(message_1)
+
     # Generate a List of Available Courses:
     course_list = get_course_list()
 
     # Collate the Query Data into the Following Lists:
     result = get_pop_lists(course_list, 2, 1)
 
-    # Column Labels & Graph Title:
+    # Column Label, Graph Title & Location:
     x1_label = "Primary Classification"
     x2_label = "Course"
     title = "Primary Classification Popularity by Course"
+    location = "Topic_stats/Primary/Course"
 
     # Get Dataset:
     stats = get_output(result, x1_label, x2_label, 1)
 
     # Plot the Dataset:
-    get_barplot(stats, x1_label, x2_label, title, 8, 2)
-    get_heatmap(stats, x1_label, x2_label, title, 6, 11, True)
+    get_barplot(stats, x1_label, x2_label, title, 8, 2, location)
+    get_heatmap(stats, x1_label, x2_label, title, 8, 11, True, location)
 
     # Order the Dataset by Frequency:
     stats = stats.sort_values(by=[x2_label, y_label], ascending=False).reset_index(drop=True)
 
     # print(stats)  # Only required for testing
 
+    print(message_6)
     output_to_csv(stats, title, location)
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_popularity_by_year():
+    start_time = time.time()
+
+    print(message_1)
+
     year_list = [1, 2, 3, 4]
 
     # Collate the Query Data into the Following Lists:
     result = get_pop_lists(year_list, 3, 1)
 
-    # Column Labels & Graph Title:
+    # Column Label, Graph Title & Location:
     x1_label = "Primary Classification"
     x2_label = "Year"
     title = "Primary Classification Popularity by Year"
+    location = "Topic_stats/Primary/Year"
 
     # Get Dataset:
     stats = get_output(result, x1_label, x2_label, 1)
 
     # Plot the Dataset:
-    get_barplot(stats, x1_label, x2_label, title, 8, 2)
-    get_heatmap(stats, x1_label, x2_label, title, 10, 7, True)
+    get_barplot(stats, x1_label, x2_label, title, 8, 2, location)
+    get_heatmap(stats, x1_label, x2_label, title, 10, 7, True, location)
 
     # Order the Dataset by Frequency:
     stats = stats.sort_values(by=[x2_label, y_label], ascending=False).reset_index(drop=True)
 
     # print(stats)  # Only required for testing
 
+    print(message_6)
     output_to_csv(stats, title, location)
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_popularity_by_core():
+    start_time = time.time()
+
+    print(message_1)
+
     core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
 
     # Collate the Query Data into the Following Lists:
     result = get_pop_lists(core_list, 4, 1)
 
-    # Column Labels & Graph Title:
+    # Column Label, Graph Title & Location:
     x1_label = "Primary Classification"
     x2_label = "Core"
     title = "Primary Classification Popularity by Core and Elective Modules"
+    location = "Topic_stats/Primary/Core"
 
     # Get Dataset:
     stats = get_output(result, x1_label, x2_label, 1)
 
     # Plot the Dataset:
-    get_barplot(stats, x1_label, x2_label, title, 8, 2)
-    get_heatmap(stats, x1_label, x2_label, title, 10, 7, True)
+    get_barplot(stats, x1_label, x2_label, title, 8, 2, location)
+    get_heatmap(stats, x1_label, x2_label, title, 10, 7, True, location)
 
     # Order the Dataset by Frequency:
     stats = stats.sort_values(by=[x2_label, y_label], ascending=False).reset_index(drop=True)
 
     # print(stats)  # Only required for testing
 
-    output_to_csv(stats, title)
+    print(message_6)
+    output_to_csv(stats, title, location)
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 # The Following Functions Describe the Popularity of Primary ACM Sub-Classifications in Terms of the Frequency of
@@ -406,6 +463,10 @@ def get_primary_popularity_by_core():
 # Each dataset is broken down first in two halves alphabetically to make plotting readable
 # and then by subcategory to highlight each facet.
 def get_secondary_popularity_by_module():
+    start_time = time.time()
+
+    print(message_1)
+
     c = open_sqlite()
 
     # Collate the Query Data into the Following Lists:
@@ -414,6 +475,7 @@ def get_secondary_popularity_by_module():
     class_list = []
     class_dic = {}
 
+    print(message_2)
     # Where secondary classification is COMMON, add the subclasses of the primary classification to the count:
     query_1 = f"SELECT A1 FROM ModuleDetails WHERE A2 = 'COMMON';"
     for row in c.execute(query_1):
@@ -446,12 +508,17 @@ def get_secondary_popularity_by_module():
         classification.append(key)
         frequency.append(value)
 
-    # Column Label & Graph Title:
+    # Column Label, Graph Title & Location:
     x_label = "Classification"
     title = "Secondary Classification Popularity by Module"
+    location = "Topic_stats/Secondary/Module"
+
+    print(message_3)
 
     # Generate Query Output Dictionary:
     stats_2d = {x_label: classification, y_label: frequency}
+
+    print(message_4)
 
     # Generate Data-frame from Dictionary:
     stats = pd.DataFrame.from_dict(stats_2d)
@@ -460,7 +527,7 @@ def get_secondary_popularity_by_module():
     stats[x_label] = stats[x_label].astype('category')
 
     # Plot the Dataset:
-    get_simple_barplot(stats, x_label, title)
+    get_simple_barplot(stats, x_label, title, location)
 
     # Order the Dataset:
     stats.set_index(x_label, inplace=True)
@@ -468,12 +535,19 @@ def get_secondary_popularity_by_module():
 
     # print(stats)  # Only required for testing
 
+    print(message_6)
     output_to_csv(stats, title, location)
 
     c.close()
 
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
+
 
 def get_secondary_popularity_per_university():
+    start_time = time.time()
+
+    print(message_1)
+
     # Generate a List of Available Regions:
     region_list = get_region_list()
 
@@ -484,12 +558,13 @@ def get_secondary_popularity_per_university():
         # Collate the Query Data into the Following Lists:
         result = get_pop_lists(uni_list, 1, 2)
 
-        # Column Labels & Graph Title:
+        # Column Label, Graph Title & Location:
         x1_label = "Secondary Classification"
         x2_label = "University"
         title = "Secondary Classification Popularity by University"
         title_1 = "Secondary Classification Popularity by University A-K"
         title_2 = "Secondary Classification Popularity by University L-Z"
+        location = "Topic_stats/Secondary/University"
 
         # Get Dataset:
         stats = get_output(result, x1_label, x2_label, 2)
@@ -502,8 +577,8 @@ def get_secondary_popularity_per_university():
         stats_2 = stats.iloc[294:]
 
         # Plot the Alphabetically-Split Dataset:
-        get_heatmap(stats_1, x1_label, x2_label, title_1, 20, 9, True)
-        get_heatmap(stats_2, x1_label, x2_label, title_2, 20, 9, True)
+        get_heatmap(stats_1, x1_label, x2_label, title_1, 20, 9, True, location)
+        get_heatmap(stats_2, x1_label, x2_label, title_2, 20, 9, True, location)
 
         # Order By Category & Reset Index:
         stats = stats.sort_values(by=z_label).reset_index(drop=True)
@@ -520,7 +595,7 @@ def get_secondary_popularity_per_university():
         heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
         for df in cat_split:
             title = f"{primary_query_words[i]} Subcategory Popularity by University"
-            get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True)
+            get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True, location)
             i += 1
 
         # Order the dataset by Frequency and reset index:
@@ -528,22 +603,30 @@ def get_secondary_popularity_per_university():
 
         # print(stats)  # Only required for testing
 
+        print(message_6)
         output_to_csv(stats, title, location)
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_secondary_popularity_by_course():
+    start_time = time.time()
+
+    print(message_1)
+
     # Generate a List of Available Courses:
     course_list = get_course_list()
 
     # Collate the Query Data into the Following Lists:
     result = get_pop_lists(course_list, 2, 2)
 
-    # Column Labels & Graph Title:
+    # Column Label, Graph Title & Location:
     x1_label = "Classification"
     x2_label = "Course"
     title = "Secondary Classification Popularity by Course"
     title_1 = "Secondary Classification Popularity by Course A-K"
     title_2 = "Secondary Classification Popularity by Course L-Z"
+    location = "Topic_stats/Secondary/Course"
 
     # Get Dataset:
     stats = get_output(result, x1_label, x2_label, 2)
@@ -556,8 +639,8 @@ def get_secondary_popularity_by_course():
     stats_2 = stats.iloc[924:]
 
     # Plot the Alphabetically-Split Dataset:
-    get_heatmap(stats_1, x1_label, x2_label, title_1, 20, 9, True)
-    get_heatmap(stats_2, x1_label, x2_label, title_2, 20, 9, True)
+    get_heatmap(stats_1, x1_label, x2_label, title_1, 20, 9, True, location)
+    get_heatmap(stats_2, x1_label, x2_label, title_2, 20, 9, True, location)
 
     # Order By Category & Reset Index:
     stats = stats.sort_values(by=z_label).reset_index(drop=True)
@@ -575,28 +658,37 @@ def get_secondary_popularity_by_course():
     heights = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
     for df in cat_split:
         title = f"{primary_query_words[i]} Subcategory Popularity by Course"
-        get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True)
+        get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True, location)
         i += 1
 
     # Order the dataset by Frequency and reset index:
     stats = stats.sort_values(by=y_label, ascending=False).reset_index(drop=True)
 
     # print(stats)  # Only required for testing
+
+    print(message_6)
     output_to_csv(stats, title, location)
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_secondary_popularity_by_year():
+    start_time = time.time()
+
+    print(message_1)
+
     year_list = [1, 2, 3, 4]
 
     # Collate the Query Data into the Following Lists:
     result = get_pop_lists(year_list, 3, 2)
 
-    # Column Labels & Graph Title:
+    # Column Label, Graph Title & Location:
     x1_label = "Secondary Classification"
     x2_label = "Year"
     title = "Secondary Classification Popularity by Year"
     title_1 = "Secondary Classification Popularity by Year A-K"
     title_2 = "Secondary Classification Popularity by Year L-Z"
+    location = "Topic_stats/Secondary/Year"
 
     # Get Dataset:
     stats = get_output(result, x1_label, x2_label, 2)
@@ -609,10 +701,10 @@ def get_secondary_popularity_by_year():
     stats_2 = stats.iloc[168:]
 
     # Plot the Alphabetically-Split Dataset:
-    get_barplot(stats_1, x1_label, x2_label, title_1, 8, 2)
-    get_barplot(stats_2, x1_label, x2_label, title_2, 8, 2)
-    get_heatmap(stats_1, x1_label, x2_label, title_1, 20, 9, True)
-    get_heatmap(stats_2, x1_label, x2_label, title_2, 20, 9, True)
+    get_barplot(stats_1, x1_label, x2_label, title_1, 8, 2, location)
+    get_barplot(stats_2, x1_label, x2_label, title_2, 8, 2, location)
+    get_heatmap(stats_1, x1_label, x2_label, title_1, 20, 9, True, location)
+    get_heatmap(stats_2, x1_label, x2_label, title_2, 20, 9, True, location)
 
     # Order By Category & Reset Index:
     stats = stats.sort_values(by=z_label).reset_index(drop=True)
@@ -629,8 +721,8 @@ def get_secondary_popularity_by_year():
     heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
     for df in cat_split:
         title = f"{primary_query_words[i]} Subcategory Popularity by Year"
-        get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True)
-        get_barplot(df, x1_label, x2_label, title, 8, 2)
+        get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True, location)
+        get_barplot(df, x1_label, x2_label, title, 8, 2, location)
         i += 1
 
     # Order the dataset by Frequency and reset index:
@@ -638,21 +730,29 @@ def get_secondary_popularity_by_year():
 
     # print(stats)  # Only required for testing
 
+    print(message_6)
     output_to_csv(stats, title, location)
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_secondary_popularity_by_core():
+    start_time = time.time()
+
+    print(message_1)
+
     core_list = ['CORE', 'ELECTIVE']
 
     # Collate the Query Data into the Following Lists:
     result = get_pop_lists(core_list, 4, 2)
 
-    # Column Labels & Graph Title:
+    # Column Label, Graph Title & Location:
     x1_label = "Secondary Classification"
     x2_label = "Core"
     title = "Secondary Classification Popularity by Core and  Elective Modules"
     title_1 = "Secondary Classification Popularity by Core and  Elective Modules A-K"
     title_2 = "Secondary Classification Popularity by Core and  Elective Modules L-Z"
+    location = "Topic_stats/Secondary/Core"
 
     # Get Dataset:
     stats = get_output(result, x1_label, x2_label, 2)
@@ -665,10 +765,10 @@ def get_secondary_popularity_by_core():
     stats_2 = stats.iloc[84:]
 
     # Plot the Alphabetically-Split Dataset:
-    get_barplot(stats_1, x1_label, x2_label, title_1, 8, 2)
-    get_barplot(stats_2, x1_label, x2_label, title_2, 8, 2)
-    get_heatmap(stats_1, x1_label, x2_label, title_1, 20, 9, True)
-    get_heatmap(stats_2, x1_label, x2_label, title_2, 20, 9, True)
+    get_barplot(stats_1, x1_label, x2_label, title_1, 8, 2, location)
+    get_barplot(stats_2, x1_label, x2_label, title_2, 8, 2, location)
+    get_heatmap(stats_1, x1_label, x2_label, title_1, 20, 9, True, location)
+    get_heatmap(stats_2, x1_label, x2_label, title_2, 20, 9, True, location)
 
     # Order By Category & Reset Index:
     stats = stats.sort_values(by=z_label).reset_index(drop=True)
@@ -685,8 +785,8 @@ def get_secondary_popularity_by_core():
     heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
     for df in cat_split:
         title = f"{primary_query_words[i]} Subcategory Popularity by Core and  Elective Modules"
-        get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True)
-        get_barplot(df, x1_label, x2_label, title, 8, 2)
+        get_heatmap(df, x1_label, x2_label, title, widths[i], heights[i], True, location)
+        get_barplot(df, x1_label, x2_label, title, 8, 2, location)
         i += 1
 
     # Order the dataset by Frequency and reset index:
@@ -694,7 +794,10 @@ def get_secondary_popularity_by_core():
 
     # print(stats)  # Only required for testing
 
+    print(message_6)
     output_to_csv(stats, title, location)
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 # This function serves to operate the above functions in sequence:
@@ -708,8 +811,8 @@ def get_stats():
     get_secondary_popularity_per_university()
 
     # By Course:
-    get_primary_popularity_by_course()
-    get_secondary_popularity_by_course()
+    # get_primary_popularity_by_course()
+    # get_secondary_popularity_by_course()
 
     # By Year:
     get_primary_popularity_by_year()

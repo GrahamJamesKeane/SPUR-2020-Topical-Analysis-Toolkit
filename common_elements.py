@@ -1,6 +1,8 @@
+import pathlib
 import sqlite3
 from datetime import datetime
-
+from pathlib import Path
+import os,sys,inspect
 primary_query_words = ['APPLIED COMPUTING', 'COMPUTER SYSTEMS ORGANISATION', 'COMPUTING METHODOLOGIES',
                        'GENERAL & REFERENCE', 'HARDWARE', 'HUMAN-CENTERED COMPUTING', 'INFORMATION SYSTEMS',
                        'MATHEMATICS OF COMPUTING', 'NETWORKS', 'SECURITY & PRIVACY', 'SOCIAL & PROFESSIONAL TOPICS',
@@ -83,15 +85,25 @@ def open_sqlite():
     return c
 
 
+def check_dir_exists(location):
+    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    new_folder = f"{currentdir}/Output/{location}/"
+
+    if not os.path.exists(new_folder):
+        pathlib.Path(new_folder).mkdir(parents=True, exist_ok=True)
+
+
 def output_to_png(fig, filename, location):
+    check_dir_exists(location)
     stamp = str(datetime.today()).replace(":", ".")
-    file_name = f"Output_files/{location}/{filename}_{stamp}.png"
+    file_name = f"Output/{location}/{filename}_{stamp}.png"
     fig.savefig(file_name)
 
 
 def output_to_csv(database, filename, location):
+    check_dir_exists(location)
     stamp = str(datetime.today()).replace(":", ".")
-    file_name = f"Output_files/{location}/{filename}_{stamp}.csv"
+    file_name = f"Output/{location}/{filename}_{stamp}.csv"
     database.to_csv(file_name)
 
 
