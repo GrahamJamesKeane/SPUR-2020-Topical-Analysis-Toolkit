@@ -1,7 +1,7 @@
 from keyword_popularity import modules_all, overview_all, learning_outcomes_all
 from topic_stats import get_stats
 
-message_1 = "Processing... Please Wait"
+message_1 = "Initialising... Please Wait"
 message_2 = "Process Complete"
 
 
