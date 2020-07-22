@@ -21,7 +21,7 @@ pd.set_option('display.max_colwidth', None)
 def get_word_cloud(keywords, title, length, location, filename):
     pattern = re.compile(r'\w[\w\-\']+')
 
-    wordcloud = WordCloud(width=(length * 10), height=(length * 10),
+    wordcloud = WordCloud(width=(length * 25), height=(length * 25),
                           background_color='black',
                           min_font_size=10,
                           regexp=pattern,
@@ -124,20 +124,20 @@ def get_data(category, name, label, data, column, location):
     query = None
     for key in primary_query_words:
         if category == 1:
-            title = f"{key} TITLE KEYWORDS"
+            filename = f"{key} TITLE KEYWORDS"
             query = f"SELECT {column} FROM ModuleDetails WHERE A1 = '{key}' or B1 = '{key}';"
         elif category == 2:
-            title = f"{key} {name} TITLE KEYWORDS"
+            filename = f"{key} {name} TITLE KEYWORDS"
             query = f"SELECT {column} FROM ModuleDetails WHERE UniversityName = '{name}' AND " \
                     f"(A1 = '{key}' or B1 = '{key}');"
         elif category == 3:
-            title = f"YEAR {name} {key} TITLE KEYWORDS"
+            filename = f"YEAR {name} {key} TITLE KEYWORDS"
             query = f"SELECT ModuleDetails.{column} FROM ModuleDetails INNER JOIN CourseDetails " \
                     f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
                     f"WHERE YearOffered = {name} AND (ModuleDetails.A1 = '{key}' " \
                     f"or ModuleDetails.B1 = '{key}');"
         elif category == 4:
-            title = f"{name} {key} TITLE KEYWORDS"
+            filename = f"{name} {key} TITLE KEYWORDS"
             query = f"SELECT ModuleDetails.{column} FROM ModuleDetails INNER JOIN CourseDetails " \
                     f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
                     f"WHERE Core = '{name}' AND (ModuleDetails.A1 = '{key}' " \
@@ -156,7 +156,6 @@ def get_data(category, name, label, data, column, location):
                 length = 10
             elif length > 50:
                 length = 50
-            filename = f"Primary_{column}_Keywords_Core_{key}"
             get_word_cloud(keyword_frequency, title, length, location, filename)
 
         # Add keys, keywords, and frequency to dictionary:
