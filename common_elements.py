@@ -124,4 +124,6 @@ def get_uni_list(region):
         uni_list.append(str(row[0]))
     c.close()
     return uni_list
+
+
 # alphabetically_sort_text_lists(excluded_words)

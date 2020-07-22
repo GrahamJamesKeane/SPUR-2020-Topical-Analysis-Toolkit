@@ -28,7 +28,7 @@ def get_simple_barplot(data, x_label, title):
         fontweight='book',
         fontsize='small')
     plt.title(title)
-    # plt.show()
+    # plt.show()  # Only required for testing
     output_to_png(chart, title, location)
     plt.close('all')
 
@@ -65,7 +65,7 @@ def get_heatmap(stats, x1_label, x2_label, title, width, height, annot):
     plt.title(title, fontdict=font)
     ax.set_ylabel('')
     ax.set_xlabel('')
-    # plt.show()
+    # plt.show()  # Only required for testing
     output_to_png(f, title, location)
     plt.close('all')
 
@@ -100,7 +100,7 @@ def get_barplot(stats, x1_label, x2_label, title, height, aspect):
         bbox_to_anchor=(1, 1),
         loc=2,
         borderaxespad=0.)
-    # plt.show()
+    # plt.show()  # Only required for testing
     output_to_png(chart, title, location)
     plt.close('all')
 
@@ -285,13 +285,11 @@ def get_primary_popularity_by_module():
     stats.set_index(x_label, inplace=True)
     stats = stats.sort_values(by=y_label, ascending=False)
 
-    print(stats)
+    # print(stats)  # # Only required for testing
 
     output_to_csv(stats, title, location)
 
     c.close()
-
-    return stats
 
 
 def get_primary_popularity_per_university():
@@ -319,11 +317,9 @@ def get_primary_popularity_per_university():
         # Order the Dataset by Frequency:
         stats = stats.sort_values(by=[x2_label, y_label], ascending=False).reset_index(drop=True)
 
-        print(stats)
+        # print(stats) # Only required for testing
 
         output_to_csv(stats, title, location)
-
-        return stats
 
 
 def get_primary_popularity_by_course():
@@ -348,11 +344,9 @@ def get_primary_popularity_by_course():
     # Order the Dataset by Frequency:
     stats = stats.sort_values(by=[x2_label, y_label], ascending=False).reset_index(drop=True)
 
-    print(stats)
+    # print(stats)  # Only required for testing
 
     output_to_csv(stats, title, location)
-
-    return stats
 
 
 def get_primary_popularity_by_year():
@@ -376,11 +370,9 @@ def get_primary_popularity_by_year():
     # Order the Dataset by Frequency:
     stats = stats.sort_values(by=[x2_label, y_label], ascending=False).reset_index(drop=True)
 
-    print(stats)
+    # print(stats)  # Only required for testing
 
     output_to_csv(stats, title, location)
-
-    return stats
 
 
 def get_primary_popularity_by_core():
@@ -404,11 +396,9 @@ def get_primary_popularity_by_core():
     # Order the Dataset by Frequency:
     stats = stats.sort_values(by=[x2_label, y_label], ascending=False).reset_index(drop=True)
 
-    print(stats)
+    # print(stats)  # Only required for testing
 
     output_to_csv(stats, title)
-
-    return stats
 
 
 # The Following Functions Describe the Popularity of Primary ACM Sub-Classifications in Terms of the Frequency of
@@ -476,13 +466,11 @@ def get_secondary_popularity_by_module():
     stats.set_index(x_label, inplace=True)
     stats = stats.sort_values(by=y_label, ascending=False)
 
-    print(stats)
+    # print(stats)  # Only required for testing
 
     output_to_csv(stats, title, location)
 
     c.close()
-
-    return stats
 
 
 def get_secondary_popularity_per_university():
@@ -538,11 +526,9 @@ def get_secondary_popularity_per_university():
         # Order the dataset by Frequency and reset index:
         stats = stats.sort_values(by=y_label, ascending=False).reset_index(drop=True)
 
-        print(stats)
+        # print(stats)  # Only required for testing
 
         output_to_csv(stats, title, location)
-
-        return stats
 
 
 def get_secondary_popularity_by_course():
@@ -595,11 +581,8 @@ def get_secondary_popularity_by_course():
     # Order the dataset by Frequency and reset index:
     stats = stats.sort_values(by=y_label, ascending=False).reset_index(drop=True)
 
-    print(stats)
-
+    # print(stats)  # Only required for testing
     output_to_csv(stats, title, location)
-
-    return stats
 
 
 def get_secondary_popularity_by_year():
@@ -653,11 +636,9 @@ def get_secondary_popularity_by_year():
     # Order the dataset by Frequency and reset index:
     stats = stats.sort_values(by=y_label, ascending=False).reset_index(drop=True)
 
-    print(stats)
+    # print(stats)  # Only required for testing
 
     output_to_csv(stats, title, location)
-
-    return stats
 
 
 def get_secondary_popularity_by_core():
@@ -711,11 +692,9 @@ def get_secondary_popularity_by_core():
     # Order the dataset by Frequency and reset index:
     stats = stats.sort_values(by=y_label, ascending=False).reset_index(drop=True)
 
-    print(stats)
+    # print(stats)  # Only required for testing
 
     output_to_csv(stats, title, location)
-
-    return stats
 
 
 # This function serves to operate the above functions in sequence:
