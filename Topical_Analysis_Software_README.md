@@ -10,7 +10,7 @@ Package Info:
 		* course_template.py
 		* keyword_popularity.py
 		* topic_stats.py
-		* TEST_DB_SPUR.db
+		* acm_curricula_2020_spur.db
 
 	Required External Packages:
 
