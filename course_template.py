@@ -119,7 +119,7 @@ def get_course_template():
     # Plot the Year-Split Dataset:
     i = 0
     for stat in stat_list:
-        caption = f"Average Course Content Year{year_list[i]}"
+        caption = f"Average Course Content Year {year_list[i]}"
         get_catplot(stat, "Year", caption, 8, 2, location, 1)
         get_heatmap(stat, "Year", caption, 20, 9, True, location, 1)
         i += 1
