@@ -1,8 +1,10 @@
+import inspect
+import os
 import pathlib
 import sqlite3
+import pandas as pd
 from datetime import datetime
-from pathlib import Path
-import os,sys,inspect
+
 primary_query_words = ['APPLIED COMPUTING', 'COMPUTER SYSTEMS ORGANISATION', 'COMPUTING METHODOLOGIES',
                        'GENERAL & REFERENCE', 'HARDWARE', 'HUMAN-CENTERED COMPUTING', 'INFORMATION SYSTEMS',
                        'MATHEMATICS OF COMPUTING', 'NETWORKS', 'SECURITY & PRIVACY', 'SOCIAL & PROFESSIONAL TOPICS',
@@ -69,6 +71,9 @@ excluded_words = ['&', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'able',
                   'within',
                   'without', 'work', 'workshops', 'write', 'year']
 
+year_list = [1, 2, 3, 4]
+core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
+
 
 # This is only used when adding new words to the excluded_words list:
 # It alphabetically sorts the entries and transforms them to lowercase
@@ -79,12 +84,14 @@ def alphabetically_sort_text_lists(text_list):
     print(list(text_list))
 
 
+# Open a connection to the database:
 def open_sqlite():
-    conn = sqlite3.connect('TEST_DB_SPUR.db')
+    conn = sqlite3.connect('acm_curricula_2020_spur.db')
     c = conn.cursor()
     return c
 
 
+# Check if directory exists and create location if not for saving files:
 def check_dir_exists(location):
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     new_folder = f"{currentdir}/Output/{location}/"
@@ -138,4 +145,11 @@ def get_uni_list(region):
     return uni_list
 
 
-# alphabetically_sort_text_lists(excluded_words)
+# Set Pandas options to view all row and column entries (Viewed in python console):
+def set_max_rows_pandas():
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+    pd.set_option('display.max_colwidth', None)
+
+# alphabetically_sort_text_lists(excluded_words)  # Only needed to sort word_lists

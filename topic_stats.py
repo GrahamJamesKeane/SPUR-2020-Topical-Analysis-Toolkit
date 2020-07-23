@@ -3,21 +3,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import time
 from common_elements import output_to_png, open_sqlite, primary_query_words, secondary_query_words, output_to_csv, \
-    get_uni_list, get_region_list, get_course_list
+    get_uni_list, get_region_list, get_course_list, set_max_rows_pandas, year_list, core_list
 
 # Set Pandas options to view all entries:
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.width', None)
-pd.set_option('display.max_colwidth', None)
+set_max_rows_pandas()
 
 freq_label = "Frequency"
 prime_class_label = "Primary Classification"
 sub_class_label = "Secondary Classification"
 
 alphabet_list = ["A-D", "E-K", "L-P", "Q-Z"]
-year_list = [1, 2, 3, 4]
-core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
 
 process_message_1 = "Fetching Popularity Data..."
 process_message_2 = "Building Query..."
@@ -52,7 +47,7 @@ def get_simple_barplot(data, title, location):
     plt.close('all')
 
 
-def get_heatmap(stats, category_label, title, width, height, annot, location):
+def get_heatmap(stats, category_label, title, width, height, annot, location, mode):
     print(process_message_5)
     sns.set()
     font = {'family': 'serif',
@@ -60,7 +55,12 @@ def get_heatmap(stats, category_label, title, width, height, annot, location):
             'weight': 'normal',
             'size': 16,
             }
-    stats_2 = stats.pivot(category_label, sub_class_label, freq_label)
+    stats_2 = None
+    cmap = sns.light_palette("green")
+    if mode == 1:
+        stats_2 = stats.pivot(category_label, prime_class_label, freq_label)
+    elif mode == 2:
+        stats_2 = stats.pivot(category_label, sub_class_label, freq_label)
     f, ax = plt.subplots(figsize=(width, height))
     g = sns.heatmap(
         stats_2,
@@ -68,8 +68,8 @@ def get_heatmap(stats, category_label, title, width, height, annot, location):
         ax=ax,
         cbar_kws={'fraction': 0.01},
         annot=annot,
-        cmap='OrRd',
-        fmt='d')
+        cmap=cmap,
+    )
     g.set_xticklabels(
         g.get_xticklabels(),
         rotation=45,
@@ -91,7 +91,7 @@ def get_heatmap(stats, category_label, title, width, height, annot, location):
     plt.close('all')
 
 
-def get_catplot(stats, category_label, title, height, aspect, location):
+def get_catplot(stats, category_label, title, height, aspect, location, mode):
     print(process_message_5)
     font = {'family': 'serif',
             'color': 'black',
@@ -101,16 +101,29 @@ def get_catplot(stats, category_label, title, height, aspect, location):
 
     plt.figure(figsize=(24, 10))
     sns.set_style("whitegrid")
-    chart = sns.catplot(
-        x=sub_class_label,
-        y=freq_label,
-        hue=category_label,
-        data=stats,
-        kind='bar',
-        height=height,
-        aspect=aspect,
-        legend_out=False,
-        palette="Paired")
+    chart = None
+    if mode == 1:
+        chart = sns.catplot(
+            x=prime_class_label,
+            y=freq_label,
+            hue=category_label,
+            data=stats,
+            kind='bar',
+            height=height,
+            aspect=aspect,
+            legend_out=False,
+            palette="Paired")
+    elif mode == 2:
+        chart = sns.catplot(
+            x=sub_class_label,
+            y=freq_label,
+            hue=category_label,
+            data=stats,
+            kind='bar',
+            height=height,
+            aspect=aspect,
+            legend_out=False,
+            palette="Paired")
     chart.set_xticklabels(
         rotation=45,
         horizontalalignment='right',
@@ -287,8 +300,8 @@ def get_alphabet_split_subsets_and_plot(stats, category_label, title, location):
     i = 0
     for stat in stat_list:
         caption = f"{title} {alphabet_list[i]}"
-        get_catplot(stat, category_label, caption, 8, 2, location)
-        get_heatmap(stat, category_label, caption, 20, 9, True, location)
+        get_catplot(stat, category_label, caption, 8, 2, location, 2)
+        get_heatmap(stat, category_label, caption, 20, 9, True, location, 2)
         i += 1
 
 
@@ -394,8 +407,8 @@ def get_primary_popularity_per_university():
         stats = get_output(result, category_label, 1)
 
         # Plot the Dataset:
-        get_catplot(stats, category_label, title, 8, 2, location)
-        get_heatmap(stats, category_label, title, 14, 10, True, location)
+        get_catplot(stats, category_label, title, 8, 2, location, 1)
+        get_heatmap(stats, category_label, title, 14, 10, True, location, 1)
 
         # Order the Dataset by Frequency:
         stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
@@ -431,8 +444,8 @@ def get_primary_popularity_by_course():
     stats = get_output(result, category_label, 1)
 
     # Plot the Dataset:
-    get_catplot(stats, category_label, title, 8, 2, location)
-    get_heatmap(stats, category_label, title, 8, 11, True, location)
+    get_catplot(stats, category_label, title, 8, 2, location, 1)
+    get_heatmap(stats, category_label, title, 8, 11, True, location, 1)
 
     # Order the Dataset by Frequency:
     stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
@@ -465,8 +478,8 @@ def get_primary_popularity_by_year():
     stats = get_output(result, category_label, 1)
 
     # Plot the Dataset:
-    get_catplot(stats, category_label, title, 8, 2, location)
-    get_heatmap(stats, category_label, title, 10, 7, True, location)
+    get_catplot(stats, category_label, title, 8, 2, location, 1)
+    get_heatmap(stats, category_label, title, 10, 7, True, location, 1)
 
     # Order the Dataset by Frequency:
     stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
@@ -499,8 +512,8 @@ def get_primary_popularity_by_core():
     stats = get_output(result, category_label, 1)
 
     # Plot the Dataset:
-    get_catplot(stats, category_label, title, 8, 2, location)
-    get_heatmap(stats, category_label, title, 10, 7, True, location)
+    get_catplot(stats, category_label, title, 8, 2, location, 1)
+    get_heatmap(stats, category_label, title, 10, 7, True, location, 1)
 
     # Order the Dataset by Frequency:
     stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
@@ -645,8 +658,8 @@ def get_secondary_popularity_per_university():
         for df in cat_split:
             if df is not None:
                 title = f"{primary_query_words[i]} Subcategory Popularity by University"
-                get_heatmap(df, category_label, title, widths[i], heights[i], True, location)
-                get_catplot(df, category_label, title, 8, 2, location)
+                get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
+                get_catplot(df, category_label, title, 8, 2, location, 2)
                 i += 1
 
         # Order the dataset by Frequency and reset index:
@@ -701,7 +714,7 @@ def get_secondary_popularity_by_course():
     heights = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
     for df in cat_split:
         title = f"{primary_query_words[i]} Subcategory Popularity by Course"
-        get_heatmap(df, category_label, title, widths[i], heights[i], True, location)
+        get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
         i += 1
 
     # Order the dataset by Frequency and reset index:
@@ -748,12 +761,12 @@ def get_secondary_popularity_by_year():
 
     # Plot the Categorically-Split Dataset:
     i = 0
-    widths = [13, 9, 10, 8, 12, 8, 7, 8, 10, 10, 8, 8, 10, 6]
+    widths = [13, 9, 12, 10, 12, 8, 7, 8, 11, 10, 10, 10, 10, 6]
     heights = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
     for df in cat_split:
         title = f"{primary_query_words[i]} Subcategory Popularity by Year"
-        get_heatmap(df, category_label, title, widths[i], heights[i], True, location)
-        get_catplot(df, category_label, title, 8, 2, location)
+        get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
+        get_catplot(df, category_label, title, 8, 2, location, 2)
         i += 1
 
     # Order the dataset by Frequency and reset index:
@@ -804,8 +817,8 @@ def get_secondary_popularity_by_core():
     heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
     for df in cat_split:
         title = f"{primary_query_words[i]} Subcategory Popularity by Core and  Elective Modules"
-        get_heatmap(df, category_label, title, widths[i], heights[i], True, location)
-        get_catplot(df, category_label, title, 8, 2, location)
+        get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
+        get_catplot(df, category_label, title, 8, 2, location, 2)
         i += 1
 
     # Order the dataset by Frequency and reset index:
@@ -844,5 +857,4 @@ def get_stats():
     get_primary_popularity_by_core()
     get_secondary_popularity_by_core()
 
-
-get_stats()
+# get_stats()  # Only required for testing

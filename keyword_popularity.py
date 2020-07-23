@@ -1,22 +1,20 @@
 import re
+import time
 from collections import Counter
 from datetime import datetime
+
+import matplotlib.pyplot as plt
 import nltk
 import pandas as pd
-import matplotlib.pyplot as plt
 from nltk import WordNetLemmatizer
-from wordcloud import WordCloud
-from common_elements import excluded_words, primary_query_words, open_sqlite, output_to_csv, get_region_list, \
-    get_uni_list, check_dir_exists
 from nltk.corpus import wordnet
-import time
-from pathlib import Path
+from wordcloud import WordCloud
+
+from common_elements import excluded_words, primary_query_words, open_sqlite, output_to_csv, get_region_list, \
+    get_uni_list, check_dir_exists, set_max_rows_pandas, year_list, core_list
 
 # Set Pandas options to view all entries:
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.width', None)
-pd.set_option('display.max_colwidth', None)
+set_max_rows_pandas()
 
 process_message_1 = "Fetching Keyword Data..."
 process_message_2 = "Building Query..."
@@ -28,7 +26,7 @@ process_message_7 = "Transferring to Dataframe..."
 process_message_8 = "Saving to File..."
 
 
-# Returns a wordcloud image based on the keyword frequency set provided:
+# Returns a wordcloud based on the keyword frequency set provided:
 def get_word_cloud(keywords, length, location, filename):
     print(process_message_5)
 
@@ -74,7 +72,7 @@ def get_wordnet_pos(word):
 def clean_data(text):
     lemmatizer = WordNetLemmatizer()
     keyword_list = []
-    pattern = re.compile(r'[^\w+\-?\w+]')
+    pattern = re.compile(r'[^\w+\-?]')
     text = re.sub(pattern, ' ', text)
     pattern = re.compile(r'(?<=\s)-+(?=\s?)')
     text = re.sub(pattern, ' ', text)
@@ -217,8 +215,8 @@ def get_primary_keywords_module_title():
 def get_primary_keywords_module_title_uni():
     start_time = time.time()
     print(process_message_1)
-    label = "University"
-    data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    category_label = "University"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output_files/Keyword_Analysis/ModuleTitle/University"
 
     # Generate a List of Available Regions:
@@ -232,7 +230,7 @@ def get_primary_keywords_module_title_uni():
             data = get_data(
                 category=2,
                 name=uni,
-                label=label,
+                label=category_label,
                 data=data,
                 column="ModuleTitle",
                 location=location)
@@ -243,7 +241,7 @@ def get_primary_keywords_module_title_uni():
 
     print(process_message_8)
     # Output to File:
-    filename = f"Primary_MT_Keywords_{label}"
+    filename = f"Primary_MT_Keywords_{category_label}"
     output_to_csv(primary_keywords, filename, location)
 
     # print(primary_keywords)  # Only required for testing
@@ -253,15 +251,14 @@ def get_primary_keywords_module_title_uni():
 def get_primary_keywords_module_title_year():
     start_time = time.time()
     print(process_message_1)
-    label = "Year Offered"
-    year_list = [1, 2, 3, 4]
-    data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    category_label = "Year Offered"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output_files/Keyword_Analysis/ModuleTitle/Year"
     for year in year_list:
         data = get_data(
             category=3,
             name=year,
-            label=label,
+            label=category_label,
             data=data,
             column="ModuleTitle",
             location=location)
@@ -272,7 +269,7 @@ def get_primary_keywords_module_title_year():
 
     print(process_message_8)
     # Output to File:
-    filename = f"Primary_MT_Keywords_{label}"
+    filename = f"Primary_MT_Keywords_{category_label}"
     output_to_csv(primary_keywords, filename, location)
 
     # print(primary_keywords)  # Only required for testing
@@ -282,16 +279,15 @@ def get_primary_keywords_module_title_year():
 def get_primary_keywords_module_title_core():
     start_time = time.time()
     print(process_message_1)
-    label = "Core and Elective Modules"
-    core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
-    data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    category_label = "Core and Elective Modules"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output_files/Keyword_Analysis/ModuleTitle/Core"
     filename = f"Primary_MT_Keywords_Core"
     for core in core_list:
         data = get_data(
             category=4,
             name=core,
-            label=label,
+            label=category_label,
             data=data,
             column="ModuleTitle",
             location=location)
@@ -339,8 +335,8 @@ def get_primary_keywords_overview():
 def get_primary_keywords_overview_uni():
     start_time = time.time()
     print(process_message_1)
-    label = "University"
-    data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    category_label = "University"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output/Keyword_Analysis/Overview/University"
     # Generate a List of Available Regions:
     region_list = get_region_list()
@@ -353,7 +349,7 @@ def get_primary_keywords_overview_uni():
             data = get_data(
                 category=2,
                 name=uni,
-                label=label,
+                label=category_label,
                 data=data,
                 column="Overview",
                 location=location)
@@ -364,7 +360,7 @@ def get_primary_keywords_overview_uni():
 
     print(process_message_8)
     # Output to File:
-    filename = f"Primary_OV_Keywords_{label}"
+    filename = f"Primary_OV_Keywords_{category_label}"
     output_to_csv(primary_keywords, filename, location)
 
     # print(primary_keywords)  # Only required for testing
@@ -374,16 +370,15 @@ def get_primary_keywords_overview_uni():
 def get_primary_keywords_overview_year():
     start_time = time.time()
     print(process_message_1)
-    label = "Year Offered"
-    year_list = [1, 2, 3, 4]
-    data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    category_label = "Year Offered"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output/Keyword_Analysis/Overview/Year"
 
     for year in year_list:
         data = get_data(
             category=3,
             name=year,
-            label=label,
+            label=category_label,
             data=data,
             column="Overview",
             location=location)
@@ -394,7 +389,7 @@ def get_primary_keywords_overview_year():
 
     print(process_message_8)
     # Output to File:
-    filename = f"Primary_OV_Keywords_{label}"
+    filename = f"Primary_OV_Keywords_{category_label}"
     output_to_csv(primary_keywords, filename, location)
 
     # print(primary_keywords)  # Only required for testing
@@ -404,16 +399,15 @@ def get_primary_keywords_overview_year():
 def get_primary_keywords_overview_core():
     start_time = time.time()
     print(process_message_1)
-    label = "Core and Elective Modules"
-    core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
-    data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    category_label = "Core and Elective Modules"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output/Keyword_Analysis/Overview/Core"
 
     for core in core_list:
         data = get_data(
             category=4,
             name=core,
-            label=label,
+            label=category_label,
             data=data,
             column="Overview",
             location=location)
@@ -462,8 +456,8 @@ def get_primary_keywords_learning_outcomes():
 def get_primary_keywords_learning_outcomes_uni():
     start_time = time.time()
     print(process_message_1)
-    label = "University"
-    data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    category_label = "University"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output/Keyword_Analysis/LearningOutcomes/University"
 
     # Generate a List of Available Regions:
@@ -477,7 +471,7 @@ def get_primary_keywords_learning_outcomes_uni():
             data = get_data(
                 category=2,
                 name=uni,
-                label=label,
+                label=category_label,
                 data=data,
                 column="LearningOutcomes",
                 location=location)
@@ -488,7 +482,7 @@ def get_primary_keywords_learning_outcomes_uni():
 
     print(process_message_8)
     # Output to File:
-    filename = f"Primary_LO_Keywords_{label}"
+    filename = f"Primary_LO_Keywords_{category_label}"
     output_to_csv(primary_keywords, filename, location)
 
     # print(primary_keywords)  # Only required for testing
@@ -498,16 +492,15 @@ def get_primary_keywords_learning_outcomes_uni():
 def get_primary_keywords_learning_outcomes_year():
     start_time = time.time()
     print(process_message_1)
-    label = "Year Offered"
-    year_list = [1, 2, 3, 4]
-    data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    category_label = "Year Offered"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output/Keyword_Analysis/LearningOutcomes/Year"
 
     for year in year_list:
         data = get_data(
             category=3,
             name=year,
-            label=label,
+            label=category_label,
             data=data,
             column="LearningOutcomes",
             location=location)
@@ -518,7 +511,7 @@ def get_primary_keywords_learning_outcomes_year():
 
     print(process_message_8)
     # Output to File:
-    filename = f"Primary_LO_Keywords_{label}"
+    filename = f"Primary_LO_Keywords_{category_label}"
     output_to_csv(primary_keywords, filename, location)
 
     # print(primary_keywords)  # Only required for testing
@@ -528,16 +521,15 @@ def get_primary_keywords_learning_outcomes_year():
 def get_primary_keywords_learning_outcomes_core():
     start_time = time.time()
     print(process_message_1)
-    label = "Core and Elective Modules"
-    core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
-    data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    category_label = "Core and Elective Modules"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Keyword_Analysis/LearningOutcomes/Core"
 
     for core in core_list:
         data = get_data(
             category=4,
             name=core,
-            label=label,
+            label=category_label,
             data=data,
             column="LearningOutcomes",
             location=location)
@@ -557,17 +549,17 @@ def get_primary_keywords_learning_outcomes_core():
 
 # Secondary by Modules:
 def get_secondary_keywords_module_title():
-    pass
+    pass  # Possible addition at a later stage
 
 
 # Secondary by Overview:
 def get_secondary_keywords_overview():
-    pass
+    pass  # Possible addition at a later stage
 
 
 # Secondary by Learning Outcomes:
 def get_secondary_keywords_learning_outcomes():
-    pass
+    pass  # Possible addition at a later stage
 
 
 # Master Functions:
