@@ -18,19 +18,19 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
 pd.set_option('display.max_colwidth', None)
 
-message_1 = "Fetching Keyword Data..."
-message_2 = "Building Query..."
-message_3 = "Processing Keywords..."
-message_4 = "Computing Keyword Frequencies..."
-message_5 = "Generating WordCloud..."
-message_6 = "Generating Dictionary..."
-message_7 = "Transferring to Dataframe..."
-message_8 = "Saving to File..."
+process_message_1 = "Fetching Keyword Data..."
+process_message_2 = "Building Query..."
+process_message_3 = "Processing Keywords..."
+process_message_4 = "Computing Keyword Frequencies..."
+process_message_5 = "Generating WordCloud..."
+process_message_6 = "Generating Dictionary..."
+process_message_7 = "Transferring to Dataframe..."
+process_message_8 = "Saving to File..."
 
 
 # Returns a wordcloud image based on the keyword frequency set provided:
 def get_word_cloud(keywords, length, location, filename):
-    print(message_5)
+    print(process_message_5)
 
     check_dir_exists(location)
 
@@ -92,7 +92,7 @@ def clean_data(text):
 
 # Takes a keyword list as a parameter and returns a dictionary of unique keyword frequencies for get_data():
 def get_count(keyword_list):
-    print(message_4)
+    print(process_message_4)
     count = Counter()
     for word in keyword_list:
         count[word] += 1
@@ -101,7 +101,7 @@ def get_count(keyword_list):
 
 # Takes a query as a parameter and returns a keyword list which has been cleaned for get_data():
 def process_keywords(query):
-    print(message_3)
+    print(process_message_3)
     c = open_sqlite()
     keyword_list = []
     for row in c.execute(query):
@@ -112,17 +112,17 @@ def process_keywords(query):
 
 # Dictionary constructor for get_data():
 def build_dictionary(key, data, keyword_frequency, name, category, label):
-    print(message_6)
+    print(process_message_6)
     item = []
     cat = []
     keywords = []
     freq = []
     for keyword, frequency in keyword_frequency.items():
-        if category > 1:
-            item.append(name)
         cat.append(key)
         keywords.append(keyword)
         freq.append(frequency)
+        if category > 1:
+            item.append(name)
     if category > 1:
         data[label] += item
     data["Classification"] += cat
@@ -138,8 +138,7 @@ def build_dictionary(key, data, keyword_frequency, name, category, label):
 # keywords generated. The frequency table is sent to the wordcloud generator after which the function constructs
 # a dictionary for the purpose of transferring the data to a Dataframe.
 def get_data(category, name, label, data, column, location):
-    print(message_2)
-    title = None
+    print(process_message_2)
     query = None
     filename = None
     for key in primary_query_words:
@@ -190,7 +189,7 @@ def get_data(category, name, label, data, column, location):
 # Primary by Modules:
 def get_primary_keywords_module_title():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     data = {"Classification": [], "Keyword": [], "Frequency": []}
     location = "Output_files/Keyword_Analysis/ModuleTitle/All"
 
@@ -202,11 +201,11 @@ def get_primary_keywords_module_title():
         column="ModuleTitle",
         location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = "Primary_MT_Keywords"
     output_to_csv(primary_keywords, filename, location)
@@ -217,7 +216,7 @@ def get_primary_keywords_module_title():
 
 def get_primary_keywords_module_title_uni():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     label = "University"
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output_files/Keyword_Analysis/ModuleTitle/University"
@@ -238,11 +237,11 @@ def get_primary_keywords_module_title_uni():
                 column="ModuleTitle",
                 location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = f"Primary_MT_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
@@ -253,7 +252,7 @@ def get_primary_keywords_module_title_uni():
 
 def get_primary_keywords_module_title_year():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     label = "Year Offered"
     year_list = [1, 2, 3, 4]
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
@@ -267,11 +266,11 @@ def get_primary_keywords_module_title_year():
             column="ModuleTitle",
             location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = f"Primary_MT_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
@@ -282,7 +281,7 @@ def get_primary_keywords_module_title_year():
 
 def get_primary_keywords_module_title_core():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     label = "Core and Elective Modules"
     core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
@@ -297,11 +296,11 @@ def get_primary_keywords_module_title_core():
             column="ModuleTitle",
             location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     output_to_csv(primary_keywords, filename, location)
 
@@ -312,7 +311,7 @@ def get_primary_keywords_module_title_core():
 # Primary by Overview:
 def get_primary_keywords_overview():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     data = {"Classification": [], "Keyword": [], "Frequency": []}
     location = "Output/Keyword_Analysis/Overview/All"
 
@@ -324,11 +323,11 @@ def get_primary_keywords_overview():
         column="Overview",
         location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = "Primary_OV_Keywords"
     output_to_csv(primary_keywords, filename, location)
@@ -339,7 +338,7 @@ def get_primary_keywords_overview():
 
 def get_primary_keywords_overview_uni():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     label = "University"
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output/Keyword_Analysis/Overview/University"
@@ -359,11 +358,11 @@ def get_primary_keywords_overview_uni():
                 column="Overview",
                 location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = f"Primary_OV_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
@@ -374,7 +373,7 @@ def get_primary_keywords_overview_uni():
 
 def get_primary_keywords_overview_year():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     label = "Year Offered"
     year_list = [1, 2, 3, 4]
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
@@ -389,11 +388,11 @@ def get_primary_keywords_overview_year():
             column="Overview",
             location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = f"Primary_OV_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
@@ -404,7 +403,7 @@ def get_primary_keywords_overview_year():
 
 def get_primary_keywords_overview_core():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     label = "Core and Elective Modules"
     core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
@@ -419,11 +418,11 @@ def get_primary_keywords_overview_core():
             column="Overview",
             location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = f"Primary_OV_Keywords_Core"
     output_to_csv(primary_keywords, filename, location)
@@ -435,7 +434,7 @@ def get_primary_keywords_overview_core():
 # Primary by Learning Outcomes:
 def get_primary_keywords_learning_outcomes():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     data = {"Classification": [], "Keyword": [], "Frequency": []}
     location = "Output/Keyword_Analysis/LearningOutcomes/All"
 
@@ -447,11 +446,11 @@ def get_primary_keywords_learning_outcomes():
         column="LearningOutcomes",
         location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = "Primary_LO_Keywords"
     output_to_csv(primary_keywords, filename, location)
@@ -462,7 +461,7 @@ def get_primary_keywords_learning_outcomes():
 
 def get_primary_keywords_learning_outcomes_uni():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     label = "University"
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
     location = "Output/Keyword_Analysis/LearningOutcomes/University"
@@ -483,11 +482,11 @@ def get_primary_keywords_learning_outcomes_uni():
                 column="LearningOutcomes",
                 location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = f"Primary_LO_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
@@ -498,7 +497,7 @@ def get_primary_keywords_learning_outcomes_uni():
 
 def get_primary_keywords_learning_outcomes_year():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     label = "Year Offered"
     year_list = [1, 2, 3, 4]
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
@@ -513,11 +512,11 @@ def get_primary_keywords_learning_outcomes_year():
             column="LearningOutcomes",
             location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = f"Primary_LO_Keywords_{label}"
     output_to_csv(primary_keywords, filename, location)
@@ -528,7 +527,7 @@ def get_primary_keywords_learning_outcomes_year():
 
 def get_primary_keywords_learning_outcomes_core():
     start_time = time.time()
-    print(message_1)
+    print(process_message_1)
     label = "Core and Elective Modules"
     core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
     data = {label: [], "Classification": [], "Keyword": [], "Frequency": []}
@@ -543,11 +542,11 @@ def get_primary_keywords_learning_outcomes_core():
             column="LearningOutcomes",
             location=location)
 
-    print(message_7)
+    print(process_message_7)
     # Transfer information to data-frame:
     primary_keywords = pd.DataFrame(data)
 
-    print(message_8)
+    print(process_message_8)
     # Output to File:
     filename = f"Primary_LO_Keywords_Core"
     output_to_csv(primary_keywords, filename, location)
