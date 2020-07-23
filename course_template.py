@@ -2,7 +2,7 @@ import pandas as pd
 from common_elements import get_course_list, year_list, primary_query_words, open_sqlite, set_max_rows_pandas, \
     output_to_csv
 from topic_stats import get_catplot, get_heatmap
-
+from date import datetime
 
 # Returns the average course-content as percentage topic per year
 def get_course_template():
@@ -125,7 +125,8 @@ def get_course_template():
         i += 1
 
     # Output the main dataframe to file:
-    output_to_csv(course_template_df, "AverageContentByYear", location)
+    stamp = str(datetime.today()).replace(":", ".")
+    output_to_csv(course_template_df, f"AverageContentByYear_{stamp}", location)
 
     # print(course_template_df)  # For testing only
 
