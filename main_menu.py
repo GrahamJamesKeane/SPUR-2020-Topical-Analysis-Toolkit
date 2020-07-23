@@ -41,6 +41,7 @@ def main():
                 main()
                 return
             elif user_input_2 == 5:
+                print("Total Process Time", "--- %s seconds ---" % (time.time() - start_time))
                 exit(0)
         elif user_input_1 == 2:
             print(message_1)
@@ -54,8 +55,9 @@ def main():
             get_stats()
             print(message_2)
         elif user_input_1 == 4:
+            print("Total Process Time", "--- %s seconds ---" % (time.time() - start_time))
             exit(0)
 
 
 main()
-print("Total Process Time", "--- %s seconds ---" % (time.time() - start_time))
+
