@@ -35,13 +35,15 @@ def get_course_template():
               'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
               'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0, 'THEORY OF COMPUTATION': 0,
               'UNCLASSIFIABLE': 0}
-
+    year_data = [year_1, year_2, year_3, year_4]
+    
     # Total recorded number of modules overall for each year:
     year_1_total_modules = 0
     year_2_total_modules = 0
     year_3_total_modules = 0
     year_4_total_modules = 0
-
+    year_total = [year_1_total_modules, year_2_total_modules, year_3_total_modules, year_4_total_modules]
+    
     # Generate a frequency table of topics by observing the occurrence of topics in each course
     # listed in the database:
     for year in year_list:
@@ -71,12 +73,15 @@ def get_course_template():
     # course_template container:
     course_template = {"Primary Classification": [], "Year": [], "Total Modules": [], "Frequency": []}
     i = 0
-    for key, value in year_1.items():
-        ratio = round((value / year_1_total_modules) * 100, 2)
-        course_template["Primary Classification"].append(key)
-        course_template["Year"].append(1)
-        course_template["Total Modules"].append(value)
-        course_template["Frequency"].append(ratio)
+    for year in year_data:
+        for (a,b) in zip(year_total, year.items()):
+        for total in year_total:
+        for key, value in year.items():
+            ratio = round((value / year_1_total_modules) * 100, 2)
+            course_template["Primary Classification"].append(key)
+            course_template["Year"].append(1)
+            course_template["Total Modules"].append(value)
+            course_template["Frequency"].append(ratio)
         i += 1
     for key, value in year_2.items():
         ratio = round((value / year_2_total_modules) * 100, 2)
