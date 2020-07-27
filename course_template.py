@@ -2,7 +2,8 @@ import pandas as pd
 from common_elements import get_course_list, year_list, primary_query_words, open_sqlite, set_max_rows_pandas, \
     output_to_csv
 from topic_stats import get_catplot, get_heatmap
-from date import datetime
+from _datetime import datetime
+
 
 # Returns the average course-content as percentage topic per year
 def get_course_template():
@@ -15,35 +16,22 @@ def get_course_template():
     course_list = get_course_list()
 
     # Containers for the frequencies of topics in each year:
-    year_1 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0, 'COMPUTING METHODOLOGIES': 0,
-              'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0, 'INFORMATION SYSTEMS': 0,
-              'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
-              'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0, 'THEORY OF COMPUTATION': 0,
-              'UNCLASSIFIABLE': 0}
-    year_2 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0, 'COMPUTING METHODOLOGIES': 0,
-              'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0, 'INFORMATION SYSTEMS': 0,
-              'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
-              'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0, 'THEORY OF COMPUTATION': 0,
-              'UNCLASSIFIABLE': 0}
-    year_3 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0, 'COMPUTING METHODOLOGIES': 0,
-              'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0, 'INFORMATION SYSTEMS': 0,
-              'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
-              'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0, 'THEORY OF COMPUTATION': 0,
-              'UNCLASSIFIABLE': 0}
-    year_4 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0, 'COMPUTING METHODOLOGIES': 0,
-              'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0, 'INFORMATION SYSTEMS': 0,
-              'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
-              'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0, 'THEORY OF COMPUTATION': 0,
-              'UNCLASSIFIABLE': 0}
+    year_1 = year_2 = year_3 = year_4 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0,
+                                         'COMPUTING METHODOLOGIES': 0,
+                                         'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0,
+                                         'INFORMATION SYSTEMS': 0,
+                                         'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
+                                         'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0,
+                                         'THEORY OF COMPUTATION': 0,
+                                         'UNCLASSIFIABLE': 0}
+
     year_data = [year_1, year_2, year_3, year_4]
-    
+
     # Total recorded number of modules overall for each year:
-    year_1_total_modules = 0
-    year_2_total_modules = 0
-    year_3_total_modules = 0
-    year_4_total_modules = 0
+    year_1_total_modules = year_2_total_modules = year_3_total_modules = year_4_total_modules = 0
+
     year_total = [year_1_total_modules, year_2_total_modules, year_3_total_modules, year_4_total_modules]
-    
+
     # Generate a frequency table of topics by observing the occurrence of topics in each course
     # listed in the database:
     for year in year_list:
@@ -72,41 +60,19 @@ def get_course_template():
     # Compute percentage of modules for a given topic per year & transfer this information to the
     # course_template container:
     course_template = {"Primary Classification": [], "Year": [], "Total Modules": [], "Frequency": []}
-    i = 0
     for year in year_data:
-        for (a,b) in zip(year_total, year.items()):
-        for total in year_total:
+        i = 0
         for key, value in year.items():
-            ratio = round((value / year_1_total_modules) * 100, 2)
+            ratio = round((value / year_total[i]) * 100, 2)
             course_template["Primary Classification"].append(key)
             course_template["Year"].append(1)
             course_template["Total Modules"].append(value)
             course_template["Frequency"].append(ratio)
-        i += 1
-    for key, value in year_2.items():
-        ratio = round((value / year_2_total_modules) * 100, 2)
-        course_template["Primary Classification"].append(key)
-        course_template["Year"].append(2)
-        course_template["Total Modules"].append(value)
-        course_template["Frequency"].append(ratio)
-        i += 1
-    for key, value in year_3.items():
-        ratio = round((value / year_3_total_modules) * 100, 2)
-        course_template["Primary Classification"].append(key)
-        course_template["Year"].append(3)
-        course_template["Total Modules"].append(value)
-        course_template["Frequency"].append(ratio)
-        i += 1
-    for key, value in year_4.items():
-        ratio = round((value / year_4_total_modules) * 100, 2)
-        course_template["Primary Classification"].append(key)
-        course_template["Year"].append(4)
-        course_template["Total Modules"].append(value)
-        course_template["Frequency"].append(ratio)
-        i += 1
+            i += 1
 
     # Transfer course_template container to a dataframe:
-    course_template_df = pd.DataFrame.from_dict(course_template).sort_values(by=["Year", "Frequency"], ascending=False).reset_index(
+    course_template_df = pd.DataFrame.from_dict(course_template).sort_values(by=["Year", "Frequency"],
+                                                                             ascending=False).reset_index(
         drop=True)
     location = "Course_Template"
 
@@ -134,6 +100,5 @@ def get_course_template():
     output_to_csv(course_template_df, f"AverageContentByYear_{stamp}", location)
 
     # print(course_template_df)  # For testing only
-
 
 # get_course_template()  # For testing only
