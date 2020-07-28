@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="acm_curricula_2020_spur" uuid="69f10460-f8ae-4b85-ad53-c35e54e7ab2e">
+    <data-source source="LOCAL" name="acm_curricula_2020_spur" uuid="068536cc-4bb0-4b4c-92bf-9330b3bca896">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\Users\Graham\PycharmProjects\SPUR_2020_Topical_Analysis\acm_curricula_2020_spur.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:C:\Users\Graha\PycharmProjects\Topical_Analysis_Curricula\acm_curricula_2020_spur.db</jdbc-url>
       <libraries>
         <library>
           <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.31.1/license.txt</url>

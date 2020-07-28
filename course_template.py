@@ -2,7 +2,7 @@ import pandas as pd
 from common_elements import get_course_list, year_list, primary_query_words, open_sqlite, set_max_rows_pandas, \
     output_to_csv
 from topic_stats import get_catplot, get_heatmap
-from _datetime import datetime
+from datetime import datetime
 
 
 # Returns the average course-content as percentage topic per year
@@ -25,11 +25,8 @@ def get_course_template():
                                          'THEORY OF COMPUTATION': 0,
                                          'UNCLASSIFIABLE': 0}
 
-
     # Total recorded number of modules overall for each year:
     year_1_total_modules = year_2_total_modules = year_3_total_modules = year_4_total_modules = 0
-
-    
 
     # Generate a frequency table of topics by observing the occurrence of topics in each course
     # listed in the database:
@@ -55,13 +52,13 @@ def get_course_template():
                         elif year == 4:
                             year_4[key] += key_count
                             year_4_total_modules += key_count
-                            
+
     year_data = [year_1, year_2, year_3, year_4]
     year_total = [year_1_total_modules, year_2_total_modules, year_3_total_modules, year_4_total_modules]
     # Compute percentage of modules for a given topic per year & transfer this information to the
     # course_template container:
     course_template = {"Primary Classification": [], "Year": [], "Total Modules": [], "Frequency": []}
-   i = 0
+    i = 0
     for key, value in year_1.items():
         ratio = round((value / year_1_total_modules) * 100, 2)
         course_template["Primary Classification"].append(key)
@@ -122,4 +119,5 @@ def get_course_template():
 
     # print(course_template_df)  # For testing only
 
-# get_course_template()  # For testing only
+
+get_course_template()  # For testing only
