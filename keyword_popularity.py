@@ -189,7 +189,7 @@ def get_primary_keywords_module_title():
     start_time = time.time()
     print(process_message_1)
     data = {"Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output_files/Keyword_Analysis/ModuleTitle/All"
+    location = "Output/Keyword_Analysis/ModuleTitle/All"
 
     data = get_data(
         category=1,
@@ -217,7 +217,7 @@ def get_primary_keywords_module_title_uni():
     print(process_message_1)
     category_label = "University"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output_files/Keyword_Analysis/ModuleTitle/University"
+    location = "Output/Keyword_Analysis/ModuleTitle/University"
 
     # Generate a List of Available Regions:
     region_list = get_region_list()
@@ -253,7 +253,7 @@ def get_primary_keywords_module_title_year():
     print(process_message_1)
     category_label = "Year Offered"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output_files/Keyword_Analysis/ModuleTitle/Year"
+    location = "Output/Keyword_Analysis/ModuleTitle/Year"
     for year in year_list:
         data = get_data(
             category=3,
@@ -281,7 +281,7 @@ def get_primary_keywords_module_title_core():
     print(process_message_1)
     category_label = "Core and Elective Modules"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output_files/Keyword_Analysis/ModuleTitle/Core"
+    location = "Output/Keyword_Analysis/ModuleTitle/Core"
     filename = f"Primary_MT_Keywords_Core"
     for core in core_list:
         data = get_data(
@@ -523,7 +523,7 @@ def get_primary_keywords_learning_outcomes_core():
     print(process_message_1)
     category_label = "Core and Elective Modules"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Keyword_Analysis/LearningOutcomes/Core"
+    location = "Output/Keyword_Analysis/LearningOutcomes/Core"
 
     for core in core_list:
         data = get_data(
