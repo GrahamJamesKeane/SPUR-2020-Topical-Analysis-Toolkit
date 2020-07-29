@@ -61,6 +61,8 @@ def get_heatmap(stats, category_label, title, width, height, annot, location, mo
         stats_2 = stats.pivot(category_label, prime_class_label, freq_label)
     elif mode == 2:
         stats_2 = stats.pivot(category_label, sub_class_label, freq_label)
+    elif mode == 3:
+        stats_2 = stats.pivot(category_label, prime_class_label, "Percent")
     f, ax = plt.subplots(figsize=(width, height))
     g = sns.heatmap(
         stats_2,
@@ -124,17 +126,39 @@ def get_catplot(stats, category_label, title, height, aspect, location, mode):
             aspect=aspect,
             legend_out=False,
             palette="Paired")
+    elif mode == 3:
+        chart = sns.catplot(
+            x=prime_class_label,
+            y="Percent",
+            hue=category_label,
+            data=stats,
+            kind='bar',
+            height=height,
+            aspect=aspect,
+            legend_out=False,
+            palette="Paired")
+    elif mode == 4:
+        chart = sns.catplot(
+            x=prime_class_label,
+            y="Percent",
+            data=stats,
+            kind='bar',
+            height=height,
+            aspect=aspect,
+            legend_out=False,
+            palette="Paired")
     chart.set_xticklabels(
         rotation=45,
         horizontalalignment='right',
         fontweight='book',
         fontsize='small')
     plt.title(title, fontdict=font)
-    plt.legend(
-        title=category_label,
-        bbox_to_anchor=(1, 1),
-        loc=2,
-        borderaxespad=0.)
+    if mode != 4:
+        plt.legend(
+            title=category_label,
+            bbox_to_anchor=(1, 1),
+            loc=2,
+            borderaxespad=0.)
     plt.figure(constrained_layout=True)
     # plt.show()  # Only required for testing
     output_to_png(chart, title, location)

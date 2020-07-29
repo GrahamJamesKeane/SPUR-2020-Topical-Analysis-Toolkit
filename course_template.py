@@ -16,14 +16,38 @@ def get_course_template():
     course_list = get_course_list()
 
     # Containers for the frequencies of topics in each year:
-    year_1 = year_2 = year_3 = year_4 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0,
-                                         'COMPUTING METHODOLOGIES': 0,
-                                         'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0,
-                                         'INFORMATION SYSTEMS': 0,
-                                         'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
-                                         'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0,
-                                         'THEORY OF COMPUTATION': 0,
-                                         'UNCLASSIFIABLE': 0}
+    year_1 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0,
+              'COMPUTING METHODOLOGIES': 0,
+              'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0,
+              'INFORMATION SYSTEMS': 0,
+              'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
+              'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0,
+              'THEORY OF COMPUTATION': 0,
+              'UNCLASSIFIABLE': 0}
+    year_2 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0,
+              'COMPUTING METHODOLOGIES': 0,
+              'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0,
+              'INFORMATION SYSTEMS': 0,
+              'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
+              'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0,
+              'THEORY OF COMPUTATION': 0,
+              'UNCLASSIFIABLE': 0}
+    year_3 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0,
+              'COMPUTING METHODOLOGIES': 0,
+              'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0,
+              'INFORMATION SYSTEMS': 0,
+              'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
+              'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0,
+              'THEORY OF COMPUTATION': 0,
+              'UNCLASSIFIABLE': 0}
+    year_4 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0,
+              'COMPUTING METHODOLOGIES': 0,
+              'GENERAL & REFERENCE': 0, 'HARDWARE': 0, 'HUMAN-CENTERED COMPUTING': 0,
+              'INFORMATION SYSTEMS': 0,
+              'MATHEMATICS OF COMPUTING': 0, 'NETWORKS': 0, 'SECURITY & PRIVACY': 0,
+              'SOCIAL & PROFESSIONAL TOPICS': 0, 'SOFTWARE & ITS ENGINEERING': 0,
+              'THEORY OF COMPUTATION': 0,
+              'UNCLASSIFIABLE': 0}
 
     # Total recorded number of modules overall for each year:
     year_1_total_modules = year_2_total_modules = year_3_total_modules = year_4_total_modules = 0
@@ -53,50 +77,49 @@ def get_course_template():
                             year_4[key] += key_count
                             year_4_total_modules += key_count
 
-    year_data = [year_1, year_2, year_3, year_4]
-    year_total = [year_1_total_modules, year_2_total_modules, year_3_total_modules, year_4_total_modules]
     # Compute percentage of modules for a given topic per year & transfer this information to the
     # course_template container:
-    course_template = {"Primary Classification": [], "Year": [], "Total Modules": [], "Frequency": []}
-    i = 0
+    course_template = {"Primary Classification": [], "Year": [], "Num Modules": [], "Total Modules": [], "Percent": []}
     for key, value in year_1.items():
         ratio = round((value / year_1_total_modules) * 100, 2)
         course_template["Primary Classification"].append(key)
         course_template["Year"].append(1)
-        course_template["Total Modules"].append(value)
-        course_template["Frequency"].append(ratio)
-        i += 1
+        course_template["Num Modules"].append(value)
+        course_template["Total Modules"].append(year_1_total_modules)
+        course_template["Percent"].append(ratio)
     for key, value in year_2.items():
         ratio = round((value / year_2_total_modules) * 100, 2)
         course_template["Primary Classification"].append(key)
         course_template["Year"].append(2)
-        course_template["Total Modules"].append(value)
-        course_template["Frequency"].append(ratio)
-        i += 1
+        course_template["Num Modules"].append(value)
+        course_template["Total Modules"].append(year_2_total_modules)
+        course_template["Percent"].append(ratio)
     for key, value in year_3.items():
         ratio = round((value / year_3_total_modules) * 100, 2)
         course_template["Primary Classification"].append(key)
         course_template["Year"].append(3)
-        course_template["Total Modules"].append(value)
-        course_template["Frequency"].append(ratio)
-        i += 1
+        course_template["Num Modules"].append(value)
+        course_template["Total Modules"].append(year_3_total_modules)
+        course_template["Percent"].append(ratio)
     for key, value in year_4.items():
         ratio = round((value / year_4_total_modules) * 100, 2)
         course_template["Primary Classification"].append(key)
         course_template["Year"].append(4)
-        course_template["Total Modules"].append(value)
-        course_template["Frequency"].append(ratio)
-        i += 1
+        course_template["Num Modules"].append(value)
+        course_template["Total Modules"].append(year_4_total_modules)
+        course_template["Percent"].append(ratio)
 
     # Transfer course_template container to a dataframe:
-    course_template_df = pd.DataFrame.from_dict(course_template).sort_values(by=["Year", "Frequency"],
+    course_template_df = pd.DataFrame.from_dict(course_template).sort_values(by=["Year", "Percent"],
                                                                              ascending=False).reset_index(
         drop=True)
     location = "Course_Template"
 
     # Generate plot of the dataset:
-    get_catplot(course_template_df, "Year", "Average Course Content", 8, 2, location, 1)
-    get_heatmap(course_template_df, "Year", "Average Course Content", 20, 9, True, location, 1)
+    get_catplot(course_template_df, "Year", "Typical Course Topical Distribution by Percent per Year", 8, 2, location,
+                3)
+    get_heatmap(course_template_df, "Year", "Typical Course Topical Distribution by Percent per Year", 20, 9, True,
+                location, 3)
 
     # Generate subsets of dataframe by year:
     year_1_percent = course_template_df[course_template_df["Year"] == 1]
@@ -108,14 +131,14 @@ def get_course_template():
     # Plot the Year-Split Dataset:
     i = 0
     for stat in stat_list:
-        caption = f"Average Course Content Year {year_list[i]}"
-        get_catplot(stat, "Year", caption, 8, 2, location, 1)
-        get_heatmap(stat, "Year", caption, 20, 9, True, location, 1)
+        caption = f"Typical Course Topical Distribution by Percent for Year {year_list[i]}"
+        get_catplot(stats=stat, category_label="Year", title=caption, height=8, aspect=2, location=location, mode=4)
+        get_heatmap(stat, "Year", caption, 20, 9, True, location, 3)
         i += 1
 
     # Output the main dataframe to file:
     stamp = str(datetime.today()).replace(":", ".")
-    output_to_csv(course_template_df, f"AverageContentByYear_{stamp}", location)
+    output_to_csv(course_template_df, f"Typical_Course_Topical_Distribution_by_Percent_per_Year_{stamp}", location)
 
     # print(course_template_df)  # For testing only
 
