@@ -299,7 +299,7 @@ def get_output(result, category_label, level):
     # Generate Query Output Dictionary:
     stats_d = {}
     if level == 1:
-        stats_d = {category_label: result[0], sub_class_label: result[1], freq_label: result[2]}
+        stats_d = {category_label: result[0], prime_class_label: result[1], freq_label: result[2]}
     elif level == 2:
         stats_d = {category_label: result[0], sub_class_label: result[1], prime_class_label: result[2],
                    freq_label: result[3]}
@@ -681,6 +681,7 @@ def get_secondary_popularity_per_university():
         heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
         for df in cat_split:
             if df is not None:
+                location = f"Topic_stats/Secondary/University/{primary_query_words[i]}"
                 title = f"{primary_query_words[i]} Subcategory Popularity by University"
                 get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
                 get_catplot(df, category_label, title, 8, 2, location, 2)
@@ -737,6 +738,7 @@ def get_secondary_popularity_by_course():
     widths = [14, 14, 10, 10, 10, 12, 12, 12, 10, 11, 12, 12, 10, 10]
     heights = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9]
     for df in cat_split:
+        location = f"Topic_stats/Secondary/Course/{primary_query_words[i]}"
         title = f"{primary_query_words[i]} Subcategory Popularity by Course"
         get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
         i += 1
@@ -788,6 +790,7 @@ def get_secondary_popularity_by_year():
     widths = [13, 9, 12, 10, 12, 8, 7, 8, 11, 10, 10, 10, 10, 6]
     heights = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8]
     for df in cat_split:
+        location = f"Topic_stats/Secondary/Year/{primary_query_words[i]}"
         title = f"{primary_query_words[i]} Subcategory Popularity by Year"
         get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
         get_catplot(df, category_label, title, 8, 2, location, 2)
@@ -840,6 +843,7 @@ def get_secondary_popularity_by_core():
     widths = [15, 13, 11, 10, 10, 13, 11, 11, 10, 11, 11, 11, 10, 8]
     heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
     for df in cat_split:
+        location = f"Topic_stats/Secondary/Core/{primary_query_words[i]}"
         title = f"{primary_query_words[i]} Subcategory Popularity by Core and  Elective Modules"
         get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
         get_catplot(df, category_label, title, 8, 2, location, 2)

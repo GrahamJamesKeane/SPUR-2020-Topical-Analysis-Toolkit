@@ -1,7 +1,3 @@
-from course_template import get_course_template
-from keyword_popularity import modules_all, overview_all, learning_outcomes_all
-from setup import get_packages, get_libs
-from topic_stats import get_stats
 import time
 
 process_message_1 = "Initialising... Please Wait"
@@ -16,12 +12,13 @@ def main():
         user_input_1 = int(input("""    Main Menu
     1: Keyword Analysis
     2: Topic Stats
-    3: Average Course Content
+    3: Topic Distribution
     4: Run All
     5: Setup
     6: Exit
     """))
         if user_input_1 == 1:
+            from keyword_analysis import modules_all, overview_all, learning_outcomes_all
             user_input_2 = int(input("""    Keyword Analysis Menu
     1: Module Title
     2: Overview
@@ -48,22 +45,28 @@ def main():
                 print("Total Process Time", "--- %s seconds ---" % (time.time() - start_time))
                 exit(0)
         elif user_input_1 == 2:
+            from topic_stats import get_stats
             print(process_message_1)
             get_stats()
             print(process_message_2)
         elif user_input_1 == 3:
+            from topic_distribution import get_topic_distribution
             print(process_message_1)
-            get_course_template()
+            get_topic_distribution()
             print(process_message_2)
         elif user_input_1 == 4:
+            from keyword_analysis import modules_all, overview_all, learning_outcomes_all
+            from topic_stats import get_stats
+            from topic_distribution import get_topic_distribution
             print(process_message_1)
             modules_all()
             overview_all()
             learning_outcomes_all()
             get_stats()
-            get_course_template()
+            get_topic_distribution()
             print(process_message_2)
         elif user_input_1 == 5:
+            from setup import get_packages, get_libs
             print(process_message_1)
             get_packages()
             get_libs()
@@ -74,4 +77,3 @@ def main():
 
 
 main()
-

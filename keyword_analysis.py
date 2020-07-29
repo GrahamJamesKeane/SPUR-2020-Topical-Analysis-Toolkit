@@ -187,9 +187,11 @@ def get_data(category, name, label, data, column, location):
 # Primary by Modules:
 def get_primary_keywords_module_title():
     start_time = time.time()
+
     print(process_message_1)
+
     data = {"Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/ModuleTitle/All"
+    location = "Keyword_Analysis/ModuleTitle/All"
 
     data = get_data(
         category=1,
@@ -200,24 +202,29 @@ def get_primary_keywords_module_title():
         location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=["Classification", "Keyword"]).reset_index(drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = "Primary_MT_Keywords"
     output_to_csv(primary_keywords, filename, location)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_keywords_module_title_uni():
     start_time = time.time()
+
     print(process_message_1)
+
     category_label = "University"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/ModuleTitle/University"
+    address = "Keyword_Analysis/ModuleTitle/University"
 
     # Generate a List of Available Regions:
     region_list = get_region_list()
@@ -227,6 +234,7 @@ def get_primary_keywords_module_title_uni():
         uni_list = get_uni_list(region)
 
         for uni in uni_list:
+            location = f"{address}/{uni}"
             data = get_data(
                 category=2,
                 name=uni,
@@ -236,25 +244,33 @@ def get_primary_keywords_module_title_uni():
                 location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = f"Primary_MT_Keywords_{category_label}"
-    output_to_csv(primary_keywords, filename, location)
+    output_to_csv(primary_keywords, filename, location=address)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_keywords_module_title_year():
     start_time = time.time()
+
     print(process_message_1)
+
     category_label = "Year Offered"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/ModuleTitle/Year"
+    address = "Keyword_Analysis/ModuleTitle/Year"
+
     for year in year_list:
+        location = f"{address}/{year}"
         data = get_data(
             category=3,
             name=year,
@@ -264,26 +280,34 @@ def get_primary_keywords_module_title_year():
             location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = f"Primary_MT_Keywords_{category_label}"
-    output_to_csv(primary_keywords, filename, location)
+    output_to_csv(primary_keywords, filename, location=address)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_keywords_module_title_core():
     start_time = time.time()
+
     print(process_message_1)
+
     category_label = "Core and Elective Modules"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/ModuleTitle/Core"
     filename = f"Primary_MT_Keywords_Core"
+    address = "Keyword_Analysis/ModuleTitle/Core"
+
     for core in core_list:
+        location = f"{address}/{core}"
         data = get_data(
             category=4,
             name=core,
@@ -293,23 +317,29 @@ def get_primary_keywords_module_title_core():
             location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
 
     print(process_message_8)
+
     # Output to File:
-    output_to_csv(primary_keywords, filename, location)
+    output_to_csv(primary_keywords, filename, location=address)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 # Primary by Overview:
 def get_primary_keywords_overview():
     start_time = time.time()
+
     print(process_message_1)
+
     data = {"Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/Overview/All"
+    location = "Keyword_Analysis/Overview/All"
 
     data = get_data(
         category=1,
@@ -320,24 +350,30 @@ def get_primary_keywords_overview():
         location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=["Classification", "Keyword"]).reset_index(drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = "Primary_OV_Keywords"
     output_to_csv(primary_keywords, filename, location)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_keywords_overview_uni():
     start_time = time.time()
+
     print(process_message_1)
+
     category_label = "University"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/Overview/University"
+    address = "Keyword_Analysis/Overview/University"
+
     # Generate a List of Available Regions:
     region_list = get_region_list()
 
@@ -346,6 +382,7 @@ def get_primary_keywords_overview_uni():
         uni_list = get_uni_list(region)
 
         for uni in uni_list:
+            location = f"{address}/{uni}"
             data = get_data(
                 category=2,
                 name=uni,
@@ -355,26 +392,33 @@ def get_primary_keywords_overview_uni():
                 location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = f"Primary_OV_Keywords_{category_label}"
-    output_to_csv(primary_keywords, filename, location)
+    output_to_csv(primary_keywords, filename, location=address)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_keywords_overview_year():
     start_time = time.time()
+
     print(process_message_1)
+
     category_label = "Year Offered"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/Overview/Year"
+    address = "Keyword_Analysis/Overview/Year"
 
     for year in year_list:
+        location = f"{address}/{year}"
         data = get_data(
             category=3,
             name=year,
@@ -384,26 +428,33 @@ def get_primary_keywords_overview_year():
             location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = f"Primary_OV_Keywords_{category_label}"
-    output_to_csv(primary_keywords, filename, location)
+    output_to_csv(primary_keywords, filename, location=address)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_keywords_overview_core():
     start_time = time.time()
+
     print(process_message_1)
+
     category_label = "Core and Elective Modules"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/Overview/Core"
+    address = "Keyword_Analysis/Overview/Core"
 
     for core in core_list:
+        location = f"{address}/{core}"
         data = get_data(
             category=4,
             name=core,
@@ -413,24 +464,30 @@ def get_primary_keywords_overview_core():
             location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = f"Primary_OV_Keywords_Core"
-    output_to_csv(primary_keywords, filename, location)
+    output_to_csv(primary_keywords, filename, location=address)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 # Primary by Learning Outcomes:
 def get_primary_keywords_learning_outcomes():
     start_time = time.time()
+
     print(process_message_1)
+
     data = {"Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/LearningOutcomes/All"
+    location = "Keyword_Analysis/LearningOutcomes/All"
 
     data = get_data(
         category=1,
@@ -441,24 +498,29 @@ def get_primary_keywords_learning_outcomes():
         location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=["Classification", "Keyword"]).reset_index(drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = "Primary_LO_Keywords"
     output_to_csv(primary_keywords, filename, location)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_keywords_learning_outcomes_uni():
     start_time = time.time()
+
     print(process_message_1)
+
     category_label = "University"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/LearningOutcomes/University"
+    address = "Keyword_Analysis/LearningOutcomes/University"
 
     # Generate a List of Available Regions:
     region_list = get_region_list()
@@ -468,6 +530,7 @@ def get_primary_keywords_learning_outcomes_uni():
         uni_list = get_uni_list(region)
 
         for uni in uni_list:
+            location = f"{address}/{uni}"
             data = get_data(
                 category=2,
                 name=uni,
@@ -477,26 +540,33 @@ def get_primary_keywords_learning_outcomes_uni():
                 location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = f"Primary_LO_Keywords_{category_label}"
-    output_to_csv(primary_keywords, filename, location)
+    output_to_csv(primary_keywords, filename, location=address)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_keywords_learning_outcomes_year():
     start_time = time.time()
+
     print(process_message_1)
+
     category_label = "Year Offered"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/LearningOutcomes/Year"
+    address = "Keyword_Analysis/LearningOutcomes/Year"
 
     for year in year_list:
+        location = f"{address}/{year}"
         data = get_data(
             category=3,
             name=year,
@@ -506,26 +576,33 @@ def get_primary_keywords_learning_outcomes_year():
             location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = f"Primary_LO_Keywords_{category_label}"
-    output_to_csv(primary_keywords, filename, location)
+    output_to_csv(primary_keywords, filename, location=address)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
 def get_primary_keywords_learning_outcomes_core():
     start_time = time.time()
+
     print(process_message_1)
+
     category_label = "Core and Elective Modules"
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
-    location = "Output/Keyword_Analysis/LearningOutcomes/Core"
+    address = "Keyword_Analysis/LearningOutcomes/Core"
 
     for core in core_list:
+        location = f"{address}/{core}"
         data = get_data(
             category=4,
             name=core,
@@ -535,15 +612,19 @@ def get_primary_keywords_learning_outcomes_core():
             location=location)
 
     print(process_message_7)
+
     # Transfer information to data-frame:
-    primary_keywords = pd.DataFrame(data)
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
 
     print(process_message_8)
+
     # Output to File:
     filename = f"Primary_LO_Keywords_Core"
-    output_to_csv(primary_keywords, filename, location)
+    output_to_csv(primary_keywords, filename, location=address)
 
     # print(primary_keywords)  # Only required for testing
+
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 

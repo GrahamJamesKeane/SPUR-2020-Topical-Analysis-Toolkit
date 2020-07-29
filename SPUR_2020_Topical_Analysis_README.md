@@ -3,13 +3,14 @@ Package Info:
 
 	Environment: Python 3.8
 
-	The package contains the following five scripts and a database:
+	The package contains the following six scripts and a database:
 
 		* main.py
 		* common_elements.py
-		* course_template.py
-		* keyword_popularity.py
+		* topic_distribution.py
+		* keyword_analysis.py
 		* topic_stats.py
+		* setup.py
 		* acm_curricula_2020_spur.db
 
 	Required External Packages:
@@ -24,7 +25,9 @@ Package Info:
 	
 Instructions:
 
-	* Before running the program ensure the package contents are located in the same directory and that all required packages are installed.
+	* Before running the program ensure the package contents are located together in the same directory.
+	
+	* On the first launch of the software run the Setup option from the menu (Option 5) in order to install and update all required packages and libraries.
 
 	* Run main.py file in a suitable IDE (Pycharm recommended). This will launch a menu interface in the python console.
 	
@@ -46,10 +49,14 @@ Main Menu:
             for each dataset outlining the classification popularity within the scope of each category. The categorys are 
             classification level, university, course, and year. 
         
-        * Average Course Content:
+        * Topic Distribution:
         
             Typical course structure per year generated from the mean proportion of topics in each course listed in the database. 
-                
+        
+        * Setup:
+        
+            Install and update required packages and libraries.
+                  
         * Run All:
                 
             Run a predetermined sequence of all functions.

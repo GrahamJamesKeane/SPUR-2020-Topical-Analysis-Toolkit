@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 # Returns the average course-content as percentage topic per year
-def get_course_template():
+def get_topic_distribution():
     c = open_sqlite()
 
     # Set pandas options to view all entries:
@@ -14,6 +14,8 @@ def get_course_template():
 
     # Generate a list of available courses:
     course_list = get_course_list()
+
+    print("Compiling Classification Distributions...")
 
     # Containers for the frequencies of topics in each year:
     year_1 = {'APPLIED COMPUTING': 0, 'COMPUTER SYSTEMS ORGANISATION': 0,
@@ -77,6 +79,8 @@ def get_course_template():
                             year_4[key] += key_count
                             year_4_total_modules += key_count
 
+    print("Transferring to Dictionary...")
+
     # Compute percentage of modules for a given topic per year & transfer this information to the
     # course_template container:
     course_template = {"Primary Classification": [], "Year": [], "Num Modules": [], "Total Modules": [], "Percent": []}
@@ -109,11 +113,13 @@ def get_course_template():
         course_template["Total Modules"].append(year_4_total_modules)
         course_template["Percent"].append(ratio)
 
+    print("Transferring to Dataframe...")
+
     # Transfer course_template container to a dataframe:
     course_template_df = pd.DataFrame.from_dict(course_template).sort_values(by=["Year", "Percent"],
                                                                              ascending=False).reset_index(
         drop=True)
-    location = "Course_Template"
+    location = "Topical_Distribution"
 
     # Generate plot of the dataset:
     get_catplot(course_template_df, "Year", "Typical Course Topical Distribution by Percent per Year", 8, 2, location,
@@ -136,6 +142,8 @@ def get_course_template():
         get_heatmap(stat, "Year", caption, 20, 9, True, location, 3)
         i += 1
 
+    print("Saving to File...")
+
     # Output the main dataframe to file:
     stamp = str(datetime.today()).replace(":", ".")
     output_to_csv(course_template_df, f"Typical_Course_Topical_Distribution_by_Percent_per_Year_{stamp}", location)
@@ -143,4 +151,4 @@ def get_course_template():
     # print(course_template_df)  # For testing only
 
 
-get_course_template()  # For testing only
+# get_topic_distribution()  # For testing only
