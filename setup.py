@@ -1,7 +1,13 @@
 import sys
 import subprocess
+import pkg_resources
+from subprocess import call
 
-# implement pip as a subprocess:
+# Update existing packages:
+packages = [dist.project_name for dist in pkg_resources.working_set]
+call("pip install --upgrade " + ' '.join(packages), shell=True)
+
+# implement pip as a subprocess to install the following packages:
 subprocess.check_call([sys.executable, '-m', 'pip', 'install',
                        'matplotlib'])
 subprocess.check_call([sys.executable, '-m', 'pip', 'install',
@@ -20,6 +26,7 @@ installed_packages = [r.decode().split('==')[0] for r in reqs.split()]
 
 print(installed_packages)
 
-import nltk
+# Install required libraries:
+import nltk  # this cannot go at the top
 nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
