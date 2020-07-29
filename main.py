@@ -1,5 +1,6 @@
 from course_template import get_course_template
 from keyword_popularity import modules_all, overview_all, learning_outcomes_all
+from setup import get_packages, get_libs
 from topic_stats import get_stats
 import time
 
@@ -17,7 +18,8 @@ def main():
     2: Topic Stats
     3: Average Course Content
     4: Run All
-    5: Exit
+    5: Setup
+    6: Exit
     """))
         if user_input_1 == 1:
             user_input_2 = int(input("""    Keyword Analysis Menu
@@ -62,6 +64,11 @@ def main():
             get_course_template()
             print(process_message_2)
         elif user_input_1 == 5:
+            print(process_message_1)
+            get_packages()
+            get_libs()
+            print(process_message_2)
+        elif user_input_1 == 6:
             print("Total Process Time", "--- %s seconds ---" % (time.time() - start_time))
             exit(0)
 
