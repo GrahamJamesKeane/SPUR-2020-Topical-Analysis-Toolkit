@@ -11,7 +11,7 @@ from nltk.corpus import wordnet
 from wordcloud import WordCloud
 
 from common_elements import excluded_words, primary_query_words, open_sqlite, output_to_csv, get_region_list, \
-    get_uni_list, check_dir_exists, set_max_rows_pandas, year_list, core_list
+    get_uni_list_region, check_dir_exists, set_max_rows_pandas, year_list, core_list
 
 # Set Pandas options to view all entries:
 set_max_rows_pandas()
@@ -231,7 +231,7 @@ def get_primary_keywords_module_title_uni():
 
     for region in region_list:
         # Generate a List of Available Universities:
-        uni_list = get_uni_list(region)
+        uni_list = get_uni_list_region(region)
 
         for uni in uni_list:
             location = f"{address}/{uni}"
@@ -379,7 +379,7 @@ def get_primary_keywords_overview_uni():
 
     for region in region_list:
         # Generate a List of Available Universities:
-        uni_list = get_uni_list(region)
+        uni_list = get_uni_list_region(region)
 
         for uni in uni_list:
             location = f"{address}/{uni}"
@@ -527,7 +527,7 @@ def get_primary_keywords_learning_outcomes_uni():
 
     for region in region_list:
         # Generate a List of Available Universities:
-        uni_list = get_uni_list(region)
+        uni_list = get_uni_list_region(region)
 
         for uni in uni_list:
             location = f"{address}/{uni}"

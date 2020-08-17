@@ -134,11 +134,22 @@ def get_course_list():
     return course_list
 
 
-def get_uni_list(region):
+def get_uni_list_region(region):
     c = open_sqlite()
     uni_list = []
     query = f"SELECT UniversityName FROM Universities " \
             f"WHERE Country = '{region}' ORDER BY UniversityName;"
+    for row in c.execute(query):
+        uni_list.append(str(row[0]))
+    c.close()
+    return uni_list
+
+
+def get_uni_list():
+    c = open_sqlite()
+    uni_list = []
+    query = f"SELECT UniversityName FROM Universities " \
+            f"ORDER BY UniversityName;"
     for row in c.execute(query):
         uni_list.append(str(row[0]))
     c.close()

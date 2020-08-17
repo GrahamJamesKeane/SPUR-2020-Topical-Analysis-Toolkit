@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import time
 from common_elements import output_to_png, open_sqlite, primary_query_words, secondary_query_words, output_to_csv, \
-    get_uni_list, get_region_list, get_course_list, set_max_rows_pandas, year_list, core_list
+    get_uni_list_region, get_region_list, get_course_list, set_max_rows_pandas, year_list, core_list, get_uni_list
 
 # Set Pandas options to view all entries:
 set_max_rows_pandas()
@@ -413,18 +413,56 @@ def get_primary_popularity_per_university():
 
     print(process_message_1)
 
+    # Generate a List of Available Universities:
+    uni_list = get_uni_list()
+
+    # Collate the Query Data into the Following Lists:
+    result = get_pop_lists(uni_list, 1, 1)
+
+    # Column Label, Graph Title & Location:
+    category_label = "University"
+    title = "Primary Classification Popularity by University"
+    location = "Topic_stats/Primary/University"
+
+    # Get Dataset:
+    stats = get_output(result, category_label, 1)
+
+    # Plot the Dataset:
+    get_catplot(stats, category_label, title, 8, 2, location, 1)
+    get_heatmap(stats, category_label, title, 14, 10, True, location, 1)
+
+    # Order the Dataset by Frequency:
+    stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
+
+    # print(stats) # Only required for testing
+
+    print(process_message_6)
+
+    # Save the Dataframe as .csv:
+    output_to_csv(stats, title, location)
+
+    # Display the Process Runtime:
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
+
+
+def get_primary_popularity_per_university_by_region():
+    start_time = time.time()
+
+    print(process_message_1)
+
     # Generate a List of Available Regions:
     region_list = get_region_list()
+
     for region in region_list:
         # Generate a List of Available Universities:
-        uni_list = get_uni_list(region)
+        uni_list = get_uni_list_region(region)
 
         # Collate the Query Data into the Following Lists:
         result = get_pop_lists(uni_list, 1, 1)
 
         # Column Label, Graph Title & Location:
         category_label = "University"
-        title = "Primary Classification Popularity by University"
+        title = f"Primary Classification Popularity by Universities in {region}"
         location = "Topic_stats/Primary/University"
 
         # Get Dataset:
@@ -645,19 +683,76 @@ def get_secondary_popularity_per_university():
 
     print(process_message_1)
 
+    # Generate a List of Available Universities:
+    uni_list = get_uni_list()
+
+    # Collate the Query Data into the Following Lists:
+    pop_list = get_pop_lists(uni_list, 1, 2)
+
+    # Column Label, Graph Title & Location:
+    category_label = "University"
+    title = "Secondary Classification Popularity by University"
+    location = "Topic_stats/Secondary/University"
+
+    # Get Dataset:
+    stats = get_output(pop_list, category_label, 2)
+
+    # Order By Sub-Category & Rest Index:
+    stats = stats.sort_values(by=sub_class_label).reset_index(drop=True)
+
+    # Get Alphabetically-Split Dataset & Plot each Subset:
+    get_alphabet_split_subsets_and_plot(stats, category_label, title, location)
+
+    # Order By Category & Reset Index:
+    stats = stats.sort_values(by=prime_class_label).reset_index(drop=True)
+
+    # Get Categorically-Split Dataset:
+    cat_split = get_categorically_split_subsets(stats)
+
+    # Plot the Categorically-Split Dataset:
+    i = 0
+    widths = [15, 13, 11, 10, 10, 13, 11, 11, 10, 11, 11, 11, 10, 8]
+    heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
+    for df in cat_split:
+        if df is not None:
+            location = f"Topic_stats/Secondary/University/{primary_query_words[i]}"
+            title = f"{primary_query_words[i]} Subcategory Popularity by University"
+            get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
+            get_catplot(df, category_label, title, 8, 2, location, 2)
+            i += 1
+
+    # Order the dataset by Frequency and reset index:
+    stats = stats.sort_values(by=freq_label, ascending=False).reset_index(drop=True)
+
+    # print(stats)  # Only required for testing
+
+    print(process_message_6)
+
+    # Save the Dataframe as .csv:
+    output_to_csv(stats, title, location)
+
+    # Display the Process Runtime:
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
+
+
+def get_secondary_popularity_per_university_by_region():
+    start_time = time.time()
+
+    print(process_message_1)
+
     # Generate a List of Available Regions:
     region_list = get_region_list()
 
     for region in region_list:
         # Generate a List of Available Universities:
-        uni_list = get_uni_list(region)
+        uni_list = get_uni_list_region(region)
 
         # Collate the Query Data into the Following Lists:
         pop_list = get_pop_lists(uni_list, 1, 2)
 
         # Column Label, Graph Title & Location:
         category_label = "University"
-        title = "Secondary Classification Popularity by University"
+        title = f"Secondary Classification Popularity by Universities in {region}"
         location = "Topic_stats/Secondary/University"
 
         # Get Dataset:
@@ -871,7 +966,9 @@ def get_stats():
 
     # By University:
     get_primary_popularity_per_university()
+    get_primary_popularity_per_university_by_region()
     get_secondary_popularity_per_university()
+    get_secondary_popularity_per_university_by_region()
 
     # By Course:
     # get_primary_popularity_by_course()
@@ -884,5 +981,6 @@ def get_stats():
     # By Core:
     get_primary_popularity_by_core()
     get_secondary_popularity_by_core()
+
 
 # get_stats()  # Only required for testing
