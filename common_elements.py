@@ -72,7 +72,7 @@ excluded_words = ['&', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'able',
                   'without', 'work', 'workshops', 'write', 'year']
 
 year_list = [1, 2, 3, 4]
-core_list = ['CORE', 'ELECTIVE', 'UNKNOWN']
+core_list = ['CORE', 'ELECTIVE']
 
 
 # This is only used when adding new words to the excluded_words list:

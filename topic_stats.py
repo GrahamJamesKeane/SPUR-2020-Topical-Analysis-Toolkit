@@ -8,7 +8,7 @@ from common_elements import output_to_png, open_sqlite, primary_query_words, sec
 # Set Pandas options to view all entries:
 set_max_rows_pandas()
 
-freq_label = "Frequency"
+freq_label = "Percentage"
 prime_class_label = "Primary Classification"
 sub_class_label = "Secondary Classification"
 
@@ -191,12 +191,18 @@ def get_pop_lists(item_list, category, level):
         class_2 = "B2"
 
     for item in item_list:
+        total_count = 0  # Track the total number of modules for the current item (Used to calculate percentage later)
         class_dic = {}
         class_list = []
+
         print(process_message_2)
+
+        # Where the secondary classification is COMMON for a given primary classification,
+        # we select all of that classification's subclasses and give them each a count of 1.
+        # If there are several occurrence's of a primary classification having a COMMON subclass
+        # the count is accumulated.
         if level == 2:
             query_a1 = query_b1 = None
-            # Where secondary classification is COMMON, add the subclasses of the primary classification to the count:
             if category == 1:  # University:
                 query_a1 = f"SELECT A1 FROM ModuleDetails WHERE UniversityName = '{item}' AND A2 = 'COMMON';"
                 query_b1 = f"SELECT B1 FROM ModuleDetails WHERE UniversityName = '{item}' AND B2 = 'COMMON';"
@@ -221,7 +227,20 @@ def get_pop_lists(item_list, category, level):
                 query_b1 = f"SELECT ModuleDetails.B1 FROM ModuleDetails INNER JOIN CourseDetails " \
                            f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
                            f"WHERE Core = '{item}' AND ModuleDetails.B2 = 'COMMON';"
+            elif category == 5:  # Region
+                query_a1 = f"SELECT ModuleDetails.A1 FROM ModuleDetails " \
+                           f"INNER JOIN CourseDetails ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
+                           f"INNER JOIN Universities ON CourseDetails.UniversityName = Universities.UniversityName " \
+                           f"WHERE Country = '{item}' AND ModuleDetails.A2 = 'COMMON';"
+                query_b1 = f"SELECT ModuleDetails.B1 FROM ModuleDetails " \
+                           f"INNER JOIN CourseDetails ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
+                           f"INNER JOIN Universities ON CourseDetails.UniversityName = Universities.UniversityName " \
+                           f"WHERE Country = '{item}' AND ModuleDetails.B2 = 'COMMON';"
+
             print(process_message_3)
+
+            # From the selected queries generate a list of primary classifications
+            # having the secondary classification 'COMMON':
             for row in c.execute(query_a1):
                 word = str(row[0])
                 class_list.append(word)
@@ -230,22 +249,28 @@ def get_pop_lists(item_list, category, level):
                 word = str(row[0])
                 class_list.append(word)
 
+            # Using the classification table, for each primary class in the list
+            # we select all of its subclasses and increment its count by 1
             for selection in class_list:
                 query_2 = f"SELECT SecondaryClassification FROM Classifications " \
                           f"WHERE PrimaryClassification = '{selection}';"
                 for value in c.execute(query_2):
                     word = str(value[0])
+                    total_count += 1
                     if word in class_dic:
                         class_dic[word] += 1
                     else:
                         class_dic[word] = 1
 
+        # Iterate through the keywords
         for key in key_list:
+
             print(process_message_2)
+
             query_3 = None
             if key != 'COMMON':
                 if category == 1:  # University:
-                    query_3 = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails " \
+                    query_3 = f"SELECT COUNT(ModuleCode) FROM ModuleDetails " \
                               f"WHERE UniversityName = '{item}' AND {class_1} = '{key}' or {class_2} = '{key}';"
                 elif category == 2:  # Course:
                     query_3 = f"SELECT COUNT(CourseDetails.ModuleCode) FROM CourseDetails INNER JOIN ModuleDetails " \
@@ -262,15 +287,28 @@ def get_pop_lists(item_list, category, level):
                               f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
                               f"WHERE Core = '{item}' AND (ModuleDetails.{class_1} = '{key}' " \
                               f"or ModuleDetails.{class_2} = '{key}');"
+                elif category == 5:  # Region
+                    query_3 = f"SELECT COUNT(ModuleDetails.A1) FROM ModuleDetails " \
+                              f"INNER JOIN CourseDetails ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
+                              f"INNER JOIN Universities " \
+                              f"ON CourseDetails.UniversityName = Universities.UniversityName " \
+                              f"WHERE Country = '{item}' AND (ModuleDetails.{class_1} = '{key}' " \
+                              f"or ModuleDetails.{class_2} = '{key}');"
+
                 print(process_message_3)
+
+                # Add the keyword and the number of associated modules to the class dictionary
+                # Increment the total modules accumulator
                 for row in c.execute(query_3):
+                    total_count += row[0]
                     if key in class_dic:
                         class_dic[key] += row[0]
                     else:
                         class_dic[key] = row[0]
 
         for key, value in class_dic.items():
-            frequency.append(value)
+            ratio = round((value / total_count) * 100, 2)  # Calculate percentage of modules with current classification
+            frequency.append(ratio)
             item_column.append(item)
             if level == 1:
                 p_classification.append(key)
@@ -445,7 +483,7 @@ def get_primary_popularity_per_university():
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
-def get_primary_popularity_per_university_by_region():
+def get_primary_popularity_by_region():
     start_time = time.time()
 
     print(process_message_1)
@@ -453,34 +491,30 @@ def get_primary_popularity_per_university_by_region():
     # Generate a List of Available Regions:
     region_list = get_region_list()
 
-    for region in region_list:
-        # Generate a List of Available Universities:
-        uni_list = get_uni_list_region(region)
+    # Collate the Query Data into the Following Lists:
+    result = get_pop_lists(region_list, 5, 1)
 
-        # Collate the Query Data into the Following Lists:
-        result = get_pop_lists(uni_list, 1, 1)
+    # Column Label, Graph Title & Location:
+    category_label = "Region"
+    title = f"Primary Classification Popularity by Region"
+    location = "Topic_stats/Primary/Region"
 
-        # Column Label, Graph Title & Location:
-        category_label = "University"
-        title = f"Primary Classification Popularity by Universities in {region}"
-        location = "Topic_stats/Primary/University"
+    # Get Dataset:
+    stats = get_output(result, category_label, 1)
 
-        # Get Dataset:
-        stats = get_output(result, category_label, 1)
+    # Plot the Dataset:
+    get_catplot(stats, category_label, title, 8, 2, location, 1)
+    get_heatmap(stats, category_label, title, 14, 10, True, location, 1)
 
-        # Plot the Dataset:
-        get_catplot(stats, category_label, title, 8, 2, location, 1)
-        get_heatmap(stats, category_label, title, 14, 10, True, location, 1)
+    # Order the Dataset by Frequency:
+    stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
 
-        # Order the Dataset by Frequency:
-        stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
+    # print(stats) # Only required for testing
 
-        # print(stats) # Only required for testing
+    print(process_message_6)
 
-        print(process_message_6)
-
-        # Save the Dataframe as .csv:
-        output_to_csv(stats, title, location)
+    # Save the Dataframe as .csv:
+    output_to_csv(stats, title, location)
 
     # Display the Process Runtime:
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
@@ -735,7 +769,7 @@ def get_secondary_popularity_per_university():
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
-def get_secondary_popularity_per_university_by_region():
+def get_secondary_popularity_by_region():
     start_time = time.time()
 
     print(process_message_1)
@@ -743,54 +777,50 @@ def get_secondary_popularity_per_university_by_region():
     # Generate a List of Available Regions:
     region_list = get_region_list()
 
-    for region in region_list:
-        # Generate a List of Available Universities:
-        uni_list = get_uni_list_region(region)
+    # Collate the Query Data into the Following Lists:
+    pop_list = get_pop_lists(region_list, 5, 2)
 
-        # Collate the Query Data into the Following Lists:
-        pop_list = get_pop_lists(uni_list, 1, 2)
+    # Column Label, Graph Title & Location:
+    category_label = "Region"
+    title = f"Secondary Classification Popularity by Region"
+    location = "Topic_stats/Secondary/Region"
 
-        # Column Label, Graph Title & Location:
-        category_label = "University"
-        title = f"Secondary Classification Popularity by Universities in {region}"
-        location = "Topic_stats/Secondary/University"
+    # Get Dataset:
+    stats = get_output(pop_list, category_label, 2)
 
-        # Get Dataset:
-        stats = get_output(pop_list, category_label, 2)
+    # Order By Sub-Category & Rest Index:
+    stats = stats.sort_values(by=sub_class_label).reset_index(drop=True)
 
-        # Order By Sub-Category & Rest Index:
-        stats = stats.sort_values(by=sub_class_label).reset_index(drop=True)
+    # Get Alphabetically-Split Dataset & Plot each Subset:
+    get_alphabet_split_subsets_and_plot(stats, category_label, title, location)
 
-        # Get Alphabetically-Split Dataset & Plot each Subset:
-        get_alphabet_split_subsets_and_plot(stats, category_label, title, location)
+    # Order By Category & Reset Index:
+    stats = stats.sort_values(by=prime_class_label).reset_index(drop=True)
 
-        # Order By Category & Reset Index:
-        stats = stats.sort_values(by=prime_class_label).reset_index(drop=True)
+    # Get Categorically-Split Dataset:
+    cat_split = get_categorically_split_subsets(stats)
 
-        # Get Categorically-Split Dataset:
-        cat_split = get_categorically_split_subsets(stats)
+    # Plot the Categorically-Split Dataset:
+    i = 0
+    widths = [15, 13, 11, 10, 10, 13, 11, 11, 10, 11, 11, 11, 10, 8]
+    heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
+    for df in cat_split:
+        if df is not None:
+            location = f"Topic_stats/Secondary/Region/{primary_query_words[i]}"
+            title = f"{primary_query_words[i]} Subcategory Popularity by Region"
+            get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
+            get_catplot(df, category_label, title, 8, 2, location, 2)
+            i += 1
 
-        # Plot the Categorically-Split Dataset:
-        i = 0
-        widths = [15, 13, 11, 10, 10, 13, 11, 11, 10, 11, 11, 11, 10, 8]
-        heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
-        for df in cat_split:
-            if df is not None:
-                location = f"Topic_stats/Secondary/University/{primary_query_words[i]}"
-                title = f"{primary_query_words[i]} Subcategory Popularity by University"
-                get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
-                get_catplot(df, category_label, title, 8, 2, location, 2)
-                i += 1
+    # Order the dataset by Frequency and reset index:
+    stats = stats.sort_values(by=freq_label, ascending=False).reset_index(drop=True)
 
-        # Order the dataset by Frequency and reset index:
-        stats = stats.sort_values(by=freq_label, ascending=False).reset_index(drop=True)
+    # print(stats)  # Only required for testing
 
-        # print(stats)  # Only required for testing
+    print(process_message_6)
 
-        print(process_message_6)
-
-        # Save the Dataframe as .csv:
-        output_to_csv(stats, title, location)
+    # Save the Dataframe as .csv:
+    output_to_csv(stats, title, location)
 
     # Display the Process Runtime:
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
@@ -961,14 +991,12 @@ def get_secondary_popularity_by_core():
 # This function serves to operate the above functions in sequence:
 def get_stats():
     # Overall Topic Popularity:
-    get_primary_popularity_by_module()
-    get_secondary_popularity_by_module()
+    #get_primary_popularity_by_module()
+    #get_secondary_popularity_by_module()
 
     # By University:
     get_primary_popularity_per_university()
-    get_primary_popularity_per_university_by_region()
     get_secondary_popularity_per_university()
-    get_secondary_popularity_per_university_by_region()
 
     # By Course:
     # get_primary_popularity_by_course()
@@ -981,6 +1009,10 @@ def get_stats():
     # By Core:
     get_primary_popularity_by_core()
     get_secondary_popularity_by_core()
+
+    # By Region:
+    get_primary_popularity_by_region()
+    get_secondary_popularity_by_region()
 
 
 # get_stats()  # Only required for testing
