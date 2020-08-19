@@ -11,7 +11,7 @@ from nltk.corpus import wordnet
 from wordcloud import WordCloud
 
 from common_elements import excluded_words, primary_query_words, open_sqlite, output_to_csv, get_region_list, \
-    get_uni_list_region, check_dir_exists, set_max_rows_pandas, year_list, core_list
+    get_uni_list_region, check_dir_exists, set_max_rows_pandas, year_list, core_list, get_uni_list
 
 # Set Pandas options to view all entries:
 set_max_rows_pandas()
@@ -140,24 +140,33 @@ def get_data(category, name, label, data, column, location):
     query = None
     filename = None
     for key in primary_query_words:
-        if category == 1:
+        if category == 1:  # All:
             filename = f"{key} TITLE KEYWORDS"
             query = f"SELECT {column} FROM ModuleDetails WHERE A1 = '{key}' or B1 = '{key}';"
-        elif category == 2:
+        elif category == 2:  # University:
             filename = f"{key} {name} TITLE KEYWORDS"
             query = f"SELECT {column} FROM ModuleDetails WHERE UniversityName = '{name}' AND " \
                     f"(A1 = '{key}' or B1 = '{key}');"
-        elif category == 3:
+        elif category == 3:  # Year
             filename = f"YEAR {name} {key} TITLE KEYWORDS"
             query = f"SELECT ModuleDetails.{column} FROM ModuleDetails INNER JOIN CourseDetails " \
                     f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
                     f"WHERE YearOffered = {name} AND (ModuleDetails.A1 = '{key}' " \
                     f"or ModuleDetails.B1 = '{key}');"
-        elif category == 4:
+        elif category == 4:  # Core:
             filename = f"{name} {key} TITLE KEYWORDS"
             query = f"SELECT ModuleDetails.{column} FROM ModuleDetails INNER JOIN CourseDetails " \
                     f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
                     f"WHERE Core = '{name}' AND (ModuleDetails.A1 = '{key}' " \
+                    f"or ModuleDetails.B1 = '{key}');"
+        elif category == 5:  # Region
+            filename = f"{name} {key} TITLE KEYWORDS"
+            query = f"SELECT ModuleDetails.{column} FROM ModuleDetails " \
+                    f"INNER JOIN CourseDetails " \
+                    f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
+                    f"INNER JOIN Universities " \
+                    f"ON Universities.UniversityName = CourseDetails.UniversityName " \
+                    f"WHERE Country = '{name}' AND (ModuleDetails.A1 = '{key}' " \
                     f"or ModuleDetails.B1 = '{key}');"
 
         # Get a list of keywords:
@@ -226,22 +235,18 @@ def get_primary_keywords_module_title_uni():
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     address = "Keyword_Analysis/ModuleTitle/University"
 
-    # Generate a List of Available Regions:
-    region_list = get_region_list()
+    # Generate a List of Available Universities:
+    uni_list = get_uni_list()
 
-    for region in region_list:
-        # Generate a List of Available Universities:
-        uni_list = get_uni_list_region(region)
-
-        for uni in uni_list:
-            location = f"{address}/{uni}"
-            data = get_data(
-                category=2,
-                name=uni,
-                label=category_label,
-                data=data,
-                column="ModuleTitle",
-                location=location)
+    for uni in uni_list:
+        location = f"{address}/{uni}"
+        data = get_data(
+            category=2,
+            name=uni,
+            label=category_label,
+            data=data,
+            column="ModuleTitle",
+            location=location)
 
     print(process_message_7)
 
@@ -332,6 +337,45 @@ def get_primary_keywords_module_title_core():
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
+def get_primary_keywords_module_title_region():
+    start_time = time.time()
+
+    print(process_message_1)
+
+    category_label = "Region"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    address = "Keyword_Analysis/ModuleTitle/Region"
+
+    # Generate a List of Available Regions:
+    region_list = get_region_list()
+
+    for region in region_list:
+        location = f"{address}/{region}"
+        data = get_data(
+            category=5,
+            name=region,
+            label=category_label,
+            data=data,
+            column="ModuleTitle",
+            location=location)
+
+    print(process_message_7)
+
+    # Transfer information to data-frame:
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
+
+    print(process_message_8)
+
+    # Output to File:
+    filename = f"Primary_MT_Keywords_{category_label}"
+    output_to_csv(primary_keywords, filename, location=address)
+
+    # print(primary_keywords)  # Only required for testing
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
+
+
 # Primary by Overview:
 def get_primary_keywords_overview():
     start_time = time.time()
@@ -374,22 +418,18 @@ def get_primary_keywords_overview_uni():
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     address = "Keyword_Analysis/Overview/University"
 
-    # Generate a List of Available Regions:
-    region_list = get_region_list()
+    # Generate a List of Available Universities:
+    uni_list = get_uni_list()
 
-    for region in region_list:
-        # Generate a List of Available Universities:
-        uni_list = get_uni_list_region(region)
-
-        for uni in uni_list:
-            location = f"{address}/{uni}"
-            data = get_data(
-                category=2,
-                name=uni,
-                label=category_label,
-                data=data,
-                column="Overview",
-                location=location)
+    for uni in uni_list:
+        location = f"{address}/{uni}"
+        data = get_data(
+            category=2,
+            name=uni,
+            label=category_label,
+            data=data,
+            column="Overview",
+            location=location)
 
     print(process_message_7)
 
@@ -480,6 +520,45 @@ def get_primary_keywords_overview_core():
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
+def get_primary_keywords_overview_region():
+    start_time = time.time()
+
+    print(process_message_1)
+
+    category_label = "Region"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    address = "Keyword_Analysis/Overview/Region"
+
+    # Generate a List of Available Regions:
+    region_list = get_region_list()
+
+    for region in region_list:
+        location = f"{address}/{region}"
+        data = get_data(
+            category=5,
+            name=region,
+            label=category_label,
+            data=data,
+            column="Overview",
+            location=location)
+
+    print(process_message_7)
+
+    # Transfer information to data-frame:
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
+
+    print(process_message_8)
+
+    # Output to File:
+    filename = f"Primary_OV_Keywords_{category_label}"
+    output_to_csv(primary_keywords, filename, location=address)
+
+    # print(primary_keywords)  # Only required for testing
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
+
+
 # Primary by Learning Outcomes:
 def get_primary_keywords_learning_outcomes():
     start_time = time.time()
@@ -522,22 +601,18 @@ def get_primary_keywords_learning_outcomes_uni():
     data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
     address = "Keyword_Analysis/LearningOutcomes/University"
 
-    # Generate a List of Available Regions:
-    region_list = get_region_list()
+    # Generate a List of Available Universities:
+    uni_list = get_uni_list()
 
-    for region in region_list:
-        # Generate a List of Available Universities:
-        uni_list = get_uni_list_region(region)
-
-        for uni in uni_list:
-            location = f"{address}/{uni}"
-            data = get_data(
-                category=2,
-                name=uni,
-                label=category_label,
-                data=data,
-                column="LearningOutcomes",
-                location=location)
+    for uni in uni_list:
+        location = f"{address}/{uni}"
+        data = get_data(
+            category=2,
+            name=uni,
+            label=category_label,
+            data=data,
+            column="LearningOutcomes",
+            location=location)
 
     print(process_message_7)
 
@@ -628,6 +703,45 @@ def get_primary_keywords_learning_outcomes_core():
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
 
 
+def get_primary_keywords_learning_outcomes_region():
+    start_time = time.time()
+
+    print(process_message_1)
+
+    category_label = "Region"
+    data = {category_label: [], "Classification": [], "Keyword": [], "Frequency": []}
+    address = "Keyword_Analysis/LearningOutcomes/Region"
+
+    # Generate a List of Available Regions:
+    region_list = get_region_list()
+
+    for region in region_list:
+        location = f"{address}/{region}"
+        data = get_data(
+            category=5,
+            name=region,
+            label=category_label,
+            data=data,
+            column="LearningOutcomes",
+            location=location)
+
+    print(process_message_7)
+
+    # Transfer information to data-frame:
+    primary_keywords = pd.DataFrame(data).sort_values(by=[category_label, "Classification", "Keyword"]).reset_index(
+        drop=True)
+
+    print(process_message_8)
+
+    # Output to File:
+    filename = f"Primary_LO_Keywords_{category_label}"
+    output_to_csv(primary_keywords, filename, location=address)
+
+    # print(primary_keywords)  # Only required for testing
+
+    print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
+
+
 # Secondary by Modules:
 def get_secondary_keywords_module_title():
     pass  # Possible addition at a later stage
@@ -650,7 +764,7 @@ def modules_all():
     get_primary_keywords_module_title_uni()
     get_primary_keywords_module_title_year()
     get_primary_keywords_module_title_core()
-
+    get_primary_keywords_module_title_region()
     # Secondary by Module:
     # get_secondary_keywords_module_title()  # Not yet available
 
@@ -661,7 +775,7 @@ def overview_all():
     get_primary_keywords_overview_uni()
     get_primary_keywords_overview_year()
     get_primary_keywords_overview_core()
-
+    get_primary_keywords_overview_region()
     # Secondary by Overview:
     # get_secondary_keywords_overview()  # Not yet available
 
@@ -672,6 +786,7 @@ def learning_outcomes_all():
     get_primary_keywords_learning_outcomes_uni()
     get_primary_keywords_learning_outcomes_year()
     get_primary_keywords_learning_outcomes_core()
+    get_primary_keywords_learning_outcomes_region()
 
     # Secondary by Learning Outcomes:
     # get_secondary_keywords_learning_outcomes()  # Not yet available
