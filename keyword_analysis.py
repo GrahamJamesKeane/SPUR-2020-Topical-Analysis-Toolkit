@@ -791,6 +791,7 @@ def learning_outcomes_all():
     # Secondary by Learning Outcomes:
     # get_secondary_keywords_learning_outcomes()  # Not yet available
 
-# modules_all()  # Only required for testing
+
+modules_all()  # Only required for testing
 # overview_all()  # Only required for testing
 # learning_outcomes_all()  # Only required for testing

@@ -307,7 +307,7 @@ def get_pop_lists(item_list, category, level):
                         class_dic[key] = row[0]
 
         for key, value in class_dic.items():
-            ratio = round((value / total_count) * 100, 2)  # Calculate percentage of modules with current classification
+            ratio = round((value / total_count) * 100, 1)  # Calculate percentage of modules with current classification
             frequency.append(ratio)
             item_column.append(item)
             if level == 1:
@@ -426,13 +426,13 @@ def get_primary_popularity_by_module():
     # Set the Classification Column Datatype as Categorical:
     stats[prime_class_label] = stats[prime_class_label].astype('category')
 
+    # Order the Dataset:
+    stats = stats.sort_values(by=prime_class_label, ascending=False)
+
     # Plot the Dataset:
     get_simple_barplot(stats, title, location)
 
-    # Order the Dataset:
     stats.set_index(prime_class_label, inplace=True)
-    stats = stats.sort_values(by=freq_label, ascending=False)
-
     # print(stats)  # # Only required for testing
 
     print(process_message_6)
@@ -465,12 +465,12 @@ def get_primary_popularity_per_university():
     # Get Dataset:
     stats = get_output(result, category_label, 1)
 
+    # Order the Dataset by Frequency:
+    stats = stats.sort_values(by=[category_label, prime_class_label], ascending=False).reset_index(drop=True)
+
     # Plot the Dataset:
     get_catplot(stats, category_label, title, 8, 2, location, 1)
     get_heatmap(stats, category_label, title, 14, 10, True, location, 1)
-
-    # Order the Dataset by Frequency:
-    stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
 
     # print(stats) # Only required for testing
 
@@ -991,8 +991,8 @@ def get_secondary_popularity_by_core():
 # This function serves to operate the above functions in sequence:
 def get_stats():
     # Overall Topic Popularity:
-    #get_primary_popularity_by_module()
-    #get_secondary_popularity_by_module()
+    get_primary_popularity_by_module()
+    get_secondary_popularity_by_module()
 
     # By University:
     get_primary_popularity_per_university()
@@ -1015,4 +1015,4 @@ def get_stats():
     get_secondary_popularity_by_region()
 
 
-# get_stats()  # Only required for testing
+get_stats()  # Only required for testing
