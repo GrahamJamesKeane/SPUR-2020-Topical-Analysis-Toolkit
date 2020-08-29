@@ -1308,4 +1308,4 @@ def get_stats():
     get_secondary_popularity_by_region()
 
 
-get_stats()  # Only required for testing
+# get_stats()  # Only required for testing

@@ -38,7 +38,7 @@ def get_word_cloud(keywords, length, location, filename):
                           background_color='black',
                           min_font_size=10,
                           regexp=pattern,
-                          colormap='gist_stern',
+                          colormap='hsv',
                           normalize_plurals=True).generate_from_frequencies(keywords)
 
     # plot the WordCloud image
