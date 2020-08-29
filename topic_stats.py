@@ -1,14 +1,18 @@
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import time
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
 from common_elements import output_to_png, open_sqlite, primary_query_words, secondary_query_words, output_to_csv, \
-    get_uni_list_region, get_region_list, get_course_list, set_max_rows_pandas, year_list, core_list, get_uni_list
+    get_region_list, get_course_list, set_max_rows_pandas, year_list, core_list, get_uni_list
 
 # Set Pandas options to view all entries:
 set_max_rows_pandas()
 
-freq_label = "Percentage"
+percent_label = "Percentage"
+rel_percent_label = "Relative Percentage"
+freq_label = "Frequency"
 prime_class_label = "Primary Classification"
 sub_class_label = "Secondary Classification"
 
@@ -19,17 +23,17 @@ process_message_2 = "Building Query..."
 process_message_3 = "Generating Dictionary..."
 process_message_4 = "Transferring to Dataframe..."
 process_message_5 = "Generating Figure..."
-process_message_6 = "Saving to File..."
+process_message_6 = "Exporting .csv ..."
 
 
 # Graphing functions:
-def get_simple_barplot(data, title, location):
+def get_simple_barplot(data, title, location, label):
     print(process_message_5)
     plt.figure(figsize=(24, 10))
     sns.set_style("whitegrid")
     chart = sns.catplot(
-        x=f"{prime_class_label}",
-        y=f"{freq_label}",
+        x=f"{label}",
+        y=f"{percent_label}",
         data=data,
         kind='bar',
         height=8,
@@ -47,30 +51,33 @@ def get_simple_barplot(data, title, location):
     plt.close('all')
 
 
-def get_heatmap(stats, category_label, title, width, height, annot, location, mode):
+def get_heatmap(stats, category_label, title, width, height, annot, location, mode, ratio_label):
     print(process_message_5)
     sns.set()
     font = {'family': 'serif',
             'color': 'black',
             'weight': 'normal',
-            'size': 16,
+            'size': 25,
             }
     stats_2 = None
     cmap = sns.light_palette("green")
     if mode == 1:
-        stats_2 = stats.pivot(category_label, prime_class_label, freq_label)
+        stats_2 = stats.pivot(category_label, prime_class_label, ratio_label)
     elif mode == 2:
-        stats_2 = stats.pivot(category_label, sub_class_label, freq_label)
+        stats_2 = stats.pivot(category_label, sub_class_label, ratio_label)
     elif mode == 3:
-        stats_2 = stats.pivot(category_label, prime_class_label, "Percent")
+        stats_2 = stats.pivot(category_label, prime_class_label, ratio_label)
+    elif mode == 4:
+        stats_2 = stats.pivot(category_label, sub_class_label, ratio_label)
     f, ax = plt.subplots(figsize=(width, height))
     g = sns.heatmap(
         stats_2,
         square=True,
         ax=ax,
-        cbar_kws={'fraction': 0.01},
+        cbar_kws={'fraction': 0.01, 'label': 'Percent'},
         annot=annot,
         cmap=cmap,
+        fmt="05.2f"
     )
     g.set_xticklabels(
         g.get_xticklabels(),
@@ -84,16 +91,17 @@ def get_heatmap(stats, category_label, title, width, height, annot, location, mo
         horizontalalignment='right',
         fontweight='book',
         fontsize='small')
-    plt.title(title, fontdict=font)
+    plt.subplots_adjust(top=0.8)
+    plt.suptitle(title, fontdict=font)
     ax.set_ylabel('')
     ax.set_xlabel('')
-    plt.tight_layout()
+    plt.autoscale(tight=True)
     # plt.show()  # Only required for testing
     output_to_png(f, title, location)
     plt.close('all')
 
 
-def get_catplot(stats, category_label, title, height, aspect, location, mode):
+def get_catplot(stats, category_label, title, height, aspect, location, mode, ratio_label):
     print(process_message_5)
     font = {'family': 'serif',
             'color': 'black',
@@ -107,7 +115,7 @@ def get_catplot(stats, category_label, title, height, aspect, location, mode):
     if mode == 1:
         chart = sns.catplot(
             x=prime_class_label,
-            y=freq_label,
+            y=ratio_label,
             hue=category_label,
             data=stats,
             kind='bar',
@@ -118,7 +126,7 @@ def get_catplot(stats, category_label, title, height, aspect, location, mode):
     elif mode == 2:
         chart = sns.catplot(
             x=sub_class_label,
-            y=freq_label,
+            y=ratio_label,
             hue=category_label,
             data=stats,
             kind='bar',
@@ -129,7 +137,7 @@ def get_catplot(stats, category_label, title, height, aspect, location, mode):
     elif mode == 3:
         chart = sns.catplot(
             x=prime_class_label,
-            y="Percent",
+            y=ratio_label,
             hue=category_label,
             data=stats,
             kind='bar',
@@ -140,7 +148,18 @@ def get_catplot(stats, category_label, title, height, aspect, location, mode):
     elif mode == 4:
         chart = sns.catplot(
             x=prime_class_label,
-            y="Percent",
+            y=ratio_label,
+            data=stats,
+            kind='bar',
+            height=height,
+            aspect=aspect,
+            legend_out=False,
+            palette="Paired")
+    elif mode == 5:
+        chart = sns.catplot(
+            x=sub_class_label,
+            y=ratio_label,
+            hue=category_label,
             data=stats,
             kind='bar',
             height=height,
@@ -174,6 +193,8 @@ def get_pop_lists(item_list, category, level):
     # Collate the Query Data into the Following Lists:
     s_classification = []
     p_classification = []
+    percentage = []
+    relative_percentage = []  # Subtopic distribution as a percentage of total modules for a given primary topic
     frequency = []
     item_column = []
     key_list = []
@@ -190,6 +211,7 @@ def get_pop_lists(item_list, category, level):
         class_1 = "A2"
         class_2 = "B2"
 
+    # Iterate through the category list (University, Region etc.)
     for item in item_list:
         total_count = 0  # Track the total number of modules for the current item (Used to calculate percentage later)
         class_dic = {}
@@ -262,7 +284,7 @@ def get_pop_lists(item_list, category, level):
                     else:
                         class_dic[word] = 1
 
-        # Iterate through the keywords
+        # Iterate through the topic keywords to query the number of modules satisfying the given criteria
         for key in key_list:
 
             print(process_message_2)
@@ -306,28 +328,144 @@ def get_pop_lists(item_list, category, level):
                     else:
                         class_dic[key] = row[0]
 
+        # Transfer the keywords and their frequencies to lists. We also compute the percentage of each
+        # keyword w.r.t. the total_count for each item in item_list
         for key, value in class_dic.items():
-            ratio = round((value / total_count) * 100, 1)  # Calculate percentage of modules with current classification
-            frequency.append(ratio)
+            ratio = (value / total_count) * 100  # Calculate percentage of modules with current classification
+            percentage.append(ratio)
+            frequency.append(value)
             item_column.append(item)
             if level == 1:
                 p_classification.append(key)
             elif level == 2:
                 s_classification.append(key)
 
+    # For secondary classifications we can quantify the relative percentage of each subtopic w.r.t.
+    # its parent topic for a given item in item_list. We first assign each subtopic its primary topic
+    # handle and then tally the total number of entries for each handle. We then compute the relative
+    # percentage as the frequency of the entry divided by the total count for that handle times 100
     if level == 2:
-        for item in s_classification:
+
+        for topic in s_classification:  # Add primary topic handle for each subtopic
             query = f"SELECT PrimaryClassification FROM Classifications " \
-                    f"WHERE  SecondaryClassification = '{item}';"
+                    f"WHERE  SecondaryClassification = '{topic}';"
             for i in c.execute(query):
                 word = str(i[0])
                 p_classification.append(word)
 
+        for item in item_list:
+            ap_count = cso_count = cm_count = gr_count = hw_count = hci_count = is_count = moc_count = nw_count = \
+                sap_count = spt_count = swe_count = toc_count = u_count = 0
+            for i in range(len(p_classification)):  # Tally the total num of modules for a given classification
+                if p_classification[i] == "APPLIED COMPUTING" and item_column[i] == item:
+                    ap_count += frequency[i]
+                elif p_classification[i] == "COMPUTER SYSTEMS ORGANISATION" and item_column[i] == item:
+                    cso_count += frequency[i]
+                elif p_classification[i] == "COMPUTING METHODOLOGIES" and item_column[i] == item:
+                    cm_count += frequency[i]
+                elif p_classification[i] == "GENERAL & REFERENCE" and item_column[i] == item:
+                    gr_count += frequency[i]
+                elif p_classification[i] == "HARDWARE" and item_column[i] == item:
+                    hw_count += frequency[i]
+                elif p_classification[i] == "HUMAN-CENTERED COMPUTING" and item_column[i] == item:
+                    hci_count += frequency[i]
+                elif p_classification[i] == "INFORMATION SYSTEMS" and item_column[i] == item:
+                    is_count += frequency[i]
+                elif p_classification[i] == "MATHEMATICS OF COMPUTING" and item_column[i] == item:
+                    moc_count += frequency[i]
+                elif p_classification[i] == "NETWORKS" and item_column[i] == item:
+                    nw_count += frequency[i]
+                elif p_classification[i] == "SECURITY & PRIVACY" and item_column[i] == item:
+                    sap_count += frequency[i]
+                elif p_classification[i] == "SOCIAL & PROFESSIONAL TOPICS" and item_column[i] == item:
+                    spt_count += frequency[i]
+                elif p_classification[i] == "SOFTWARE & ITS ENGINEERING" and item_column[i] == item:
+                    swe_count += frequency[i]
+                elif p_classification[i] == "THEORY OF COMPUTATION" and item_column[i] == item:
+                    toc_count += frequency[i]
+                elif p_classification[i] == "UNCLASSIFIABLE" and item_column[i] == item:
+                    u_count += frequency[i]
+
+            # Provision for division by zero:
+            if ap_count == 0:
+                ap_count = 1
+            if cso_count == 0:
+                cso_count = 1
+            if cm_count == 0:
+                cm_count = 1
+            if gr_count == 0:
+                gr_count = 1
+            if hw_count == 0:
+                hw_count = 1
+            if hci_count == 0:
+                hci_count = 1
+            if is_count == 0:
+                is_count = 1
+            if moc_count == 0:
+                moc_count = 1
+            if nw_count == 0:
+                nw_count = 1
+            if sap_count == 0:
+                sap_count = 1
+            if spt_count == 0:
+                spt_count = 1
+            if swe_count == 0:
+                swe_count = 1
+            if toc_count == 0:
+                toc_count = 1
+            if u_count == 0:
+                u_count = 1
+
+            for i in range(
+                    len(p_classification)):  # Calculate the percentage of each subtopic within its classification
+                if p_classification[i] == "APPLIED COMPUTING" and item_column[i] == item:
+                    ratio = (frequency[i] / ap_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "COMPUTER SYSTEMS ORGANISATION" and item_column[i] == item:
+                    ratio = (frequency[i] / cso_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "COMPUTING METHODOLOGIES" and item_column[i] == item:
+                    ratio = (frequency[i] / cm_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "GENERAL & REFERENCE" and item_column[i] == item:
+                    ratio = (frequency[i] / gr_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "HARDWARE" and item_column[i] == item:
+                    ratio = (frequency[i] / hw_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "HUMAN-CENTERED COMPUTING" and item_column[i] == item:
+                    ratio = (frequency[i] / hci_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "INFORMATION SYSTEMS" and item_column[i] == item:
+                    ratio = (frequency[i] / is_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "MATHEMATICS OF COMPUTING" and item_column[i] == item:
+                    ratio = (frequency[i] / moc_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "NETWORKS" and item_column[i] == item:
+                    ratio = (frequency[i] / nw_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "SECURITY & PRIVACY" and item_column[i] == item:
+                    ratio = (frequency[i] / sap_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "SOCIAL & PROFESSIONAL TOPICS" and item_column[i] == item:
+                    ratio = (frequency[i] / spt_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "SOFTWARE & ITS ENGINEERING" and item_column[i] == item:
+                    ratio = (frequency[i] / swe_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "THEORY OF COMPUTATION" and item_column[i] == item:
+                    ratio = (frequency[i] / toc_count) * 100
+                    relative_percentage.insert(i, ratio)
+                elif p_classification[i] == "UNCLASSIFIABLE" and item_column[i] == item:
+                    ratio = (frequency[i] / u_count) * 100
+                    relative_percentage.insert(i, ratio)
+
     c.close()
     if level == 1:
-        return [item_column, p_classification, frequency]
+        return [item_column, p_classification, percentage, frequency]
     elif level == 2:
-        return [item_column, s_classification, p_classification, frequency]
+        return [item_column, s_classification, p_classification, percentage, frequency, relative_percentage]
 
 
 # Transform Query Output into Dataframe
@@ -337,10 +475,13 @@ def get_output(result, category_label, level):
     # Generate Query Output Dictionary:
     stats_d = {}
     if level == 1:
-        stats_d = {category_label: result[0], prime_class_label: result[1], freq_label: result[2]}
+        stats_d = {category_label: result[0], prime_class_label: result[1],
+                   f"{category_label} {percent_label}": result[2],
+                   freq_label: result[3]}
     elif level == 2:
         stats_d = {category_label: result[0], sub_class_label: result[1], prime_class_label: result[2],
-                   freq_label: result[3]}
+                   f"{category_label} {percent_label}": result[3], freq_label: result[4],
+                   f"{prime_class_label} {rel_percent_label}": result[5]}
 
     print(process_message_4)
 
@@ -362,27 +503,46 @@ def get_alphabet_split_subsets_and_plot(stats, category_label, title, location):
     i = 0
     for stat in stat_list:
         caption = f"{title} {alphabet_list[i]}"
-        get_catplot(stat, category_label, caption, 8, 2, location, 2)
-        get_heatmap(stat, category_label, caption, 20, 9, True, location, 2)
+        get_catplot(stat, category_label, caption, 8, 2, location, 2, f"{category_label} {percent_label}")
+        get_heatmap(stat, category_label, caption, 20, 15, True, location, 2, f"{category_label} {percent_label}")
         i += 1
 
 
-# Construct subsets of the given dataframe categorically:
+# Construct subsets of the given dataframe categorically and order each subset alphabetically:
 def get_categorically_split_subsets(stats):
-    stats_1 = stats[stats[prime_class_label].str.contains('APPLIED COMPUTING', regex=True, na=False)]
-    stats_2 = stats[stats[prime_class_label].str.contains('COMPUTER SYSTEMS ORGANISATION', regex=True, na=False)]
-    stats_3 = stats[stats[prime_class_label].str.contains('COMPUTING METHODOLOGIES', regex=True, na=False)]
-    stats_4 = stats[stats[prime_class_label].str.contains('GENERAL & REFERENCE', regex=True, na=False)]
-    stats_5 = stats[stats[prime_class_label].str.contains('HARDWARE', regex=True, na=False)]
-    stats_6 = stats[stats[prime_class_label].str.contains('HUMAN-CENTERED COMPUTING', regex=True, na=False)]
-    stats_7 = stats[stats[prime_class_label].str.contains('INFORMATION SYSTEMS', regex=True, na=False)]
-    stats_8 = stats[stats[prime_class_label].str.contains('MATHEMATICS OF COMPUTING', regex=True, na=False)]
-    stats_9 = stats[stats[prime_class_label].str.contains('NETWORKS', regex=True, na=False)]
-    stats_10 = stats[stats[prime_class_label].str.contains('SECURITY & PRIVACY', regex=True, na=False)]
-    stats_11 = stats[stats[prime_class_label].str.contains('SOCIAL & PROFESSIONAL TOPICS', regex=True, na=False)]
-    stats_12 = stats[stats[prime_class_label].str.contains('SOFTWARE & ITS ENGINEERING', regex=True, na=False)]
-    stats_13 = stats[stats[prime_class_label].str.contains('THEORY OF COMPUTATION', regex=True, na=False)]
-    stats_14 = stats[stats[prime_class_label].str.contains('UNCLASSIFIABLE', regex=True, na=False)]
+    stats_1 = stats[stats[prime_class_label].str.contains('APPLIED COMPUTING', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_2 = stats[
+        stats[prime_class_label].str.contains('COMPUTER SYSTEMS ORGANISATION', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_3 = stats[stats[prime_class_label].str.contains('COMPUTING METHODOLOGIES', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_4 = stats[stats[prime_class_label].str.contains('GENERAL & REFERENCE', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_5 = stats[stats[prime_class_label].str.contains('HARDWARE', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_6 = stats[
+        stats[prime_class_label].str.contains('HUMAN-CENTERED COMPUTING', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_7 = stats[stats[prime_class_label].str.contains('INFORMATION SYSTEMS', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_8 = stats[
+        stats[prime_class_label].str.contains('MATHEMATICS OF COMPUTING', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_9 = stats[stats[prime_class_label].str.contains('NETWORKS', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_10 = stats[stats[prime_class_label].str.contains('SECURITY & PRIVACY', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_11 = stats[
+        stats[prime_class_label].str.contains('SOCIAL & PROFESSIONAL TOPICS', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_12 = stats[
+        stats[prime_class_label].str.contains('SOFTWARE & ITS ENGINEERING', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_13 = stats[stats[prime_class_label].str.contains('THEORY OF COMPUTATION', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
+    stats_14 = stats[stats[prime_class_label].str.contains('UNCLASSIFIABLE', regex=True, na=False)].sort_values(
+        by=sub_class_label, ascending=False)
 
     cat_split = [stats_1, stats_2, stats_3, stats_4, stats_5, stats_6, stats_7, stats_8, stats_9, stats_10,
                  stats_11, stats_12, stats_13, stats_14]
@@ -402,14 +562,21 @@ def get_primary_popularity_by_module():
     # Collate the Query Data into the Following Lists:
     classification = []
     frequency = []
+    percentage = []
+    total_count = 0
 
     print(process_message_2)
+
     # Generate Query and Transfer to List:
     for word in primary_query_words:
         query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails WHERE A1 = '{word}' or B1 = '{word}';"
         classification.append(word)
         for row in c.execute(query):
+            total_count += row[0]
             frequency.append(row[0])
+    for value in frequency:
+        ratio = (value / total_count) * 100  # Calculate percentage of modules with current classification
+        percentage.append(ratio)
 
     # Column Label, Graph Title & Location:
     title = "Primary Classification Popularity by Module"
@@ -417,7 +584,7 @@ def get_primary_popularity_by_module():
 
     print(process_message_3)
     # Generate Query Output Dictionary:
-    stats_2d = {prime_class_label: classification, freq_label: frequency}
+    stats_2d = {prime_class_label: classification, percent_label: percentage, freq_label: frequency}
 
     print(process_message_4)
     # Generate Data-Frame from Dictionary:
@@ -430,7 +597,7 @@ def get_primary_popularity_by_module():
     stats = stats.sort_values(by=prime_class_label, ascending=False)
 
     # Plot the Dataset:
-    get_simple_barplot(stats, title, location)
+    get_simple_barplot(stats, title, location, prime_class_label)
 
     stats.set_index(prime_class_label, inplace=True)
     # print(stats)  # # Only required for testing
@@ -469,8 +636,8 @@ def get_primary_popularity_per_university():
     stats = stats.sort_values(by=[category_label, prime_class_label], ascending=False).reset_index(drop=True)
 
     # Plot the Dataset:
-    get_catplot(stats, category_label, title, 8, 2, location, 1)
-    get_heatmap(stats, category_label, title, 14, 10, True, location, 1)
+    get_catplot(stats, category_label, title, 8, 2, location, 1, f"{category_label} {percent_label}")
+    get_heatmap(stats, category_label, title, 14, 10, True, location, 1, f"{category_label} {percent_label}")
 
     # print(stats) # Only required for testing
 
@@ -503,11 +670,11 @@ def get_primary_popularity_by_region():
     stats = get_output(result, category_label, 1)
 
     # Plot the Dataset:
-    get_catplot(stats, category_label, title, 8, 2, location, 1)
-    get_heatmap(stats, category_label, title, 14, 10, True, location, 1)
+    get_catplot(stats, category_label, title, 8, 2, location, 1, f"{category_label} {percent_label}")
+    get_heatmap(stats, category_label, title, 14, 10, True, location, 1, f"{category_label} {percent_label}")
 
-    # Order the Dataset by Frequency:
-    stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
+    # Order the Dataset by category:
+    stats = stats.sort_values(by=[category_label], ascending=False).reset_index(drop=True)
 
     # print(stats) # Only required for testing
 
@@ -540,11 +707,11 @@ def get_primary_popularity_by_course():
     stats = get_output(result, category_label, 1)
 
     # Plot the Dataset:
-    get_catplot(stats, category_label, title, 8, 2, location, 1)
-    get_heatmap(stats, category_label, title, 8, 11, True, location, 1)
+    get_catplot(stats, category_label, title, 8, 2, location, 1, f"{category_label} {percent_label}")
+    get_heatmap(stats, category_label, title, 8, 11, True, location, 1, f"{category_label} {percent_label}")
 
     # Order the Dataset by Frequency:
-    stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
+    stats = stats.sort_values(by=[category_label, percent_label], ascending=False).reset_index(drop=True)
 
     # print(stats)  # Only required for testing
 
@@ -574,11 +741,11 @@ def get_primary_popularity_by_year():
     stats = get_output(result, category_label, 1)
 
     # Plot the Dataset:
-    get_catplot(stats, category_label, title, 8, 2, location, 1)
-    get_heatmap(stats, category_label, title, 10, 7, True, location, 1)
+    get_catplot(stats, category_label, title, 8, 2, location, 1, f"{category_label} {percent_label}")
+    get_heatmap(stats, category_label, title, 10, 7, True, location, 1, f"{category_label} {percent_label}")
 
-    # Order the Dataset by Frequency:
-    stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
+    # Order the Dataset by category:
+    stats = stats.sort_values(by=[category_label], ascending=False).reset_index(drop=True)
 
     # print(stats)  # Only required for testing
 
@@ -608,11 +775,11 @@ def get_primary_popularity_by_core():
     stats = get_output(result, category_label, 1)
 
     # Plot the Dataset:
-    get_catplot(stats, category_label, title, 8, 2, location, 1)
-    get_heatmap(stats, category_label, title, 10, 7, True, location, 1)
+    get_catplot(stats, category_label, title, 8, 2, location, 1, f"{category_label} {percent_label}")
+    get_heatmap(stats, category_label, title, 10, 7, True, location, 1, f"{category_label} {percent_label}")
 
-    # Order the Dataset by Frequency:
-    stats = stats.sort_values(by=[category_label, freq_label], ascending=False).reset_index(drop=True)
+    # Order the Dataset by category:
+    stats = stats.sort_values(by=[category_label], ascending=False).reset_index(drop=True)
 
     # print(stats)  # Only required for testing
 
@@ -637,13 +804,18 @@ def get_secondary_popularity_by_module():
     c = open_sqlite()
 
     # Collate the Query Data into the Following Lists:
-    classification = []
+    s_classification = []
+    p_classification = []
     frequency = []
+    percentage = []
+    relative_percentage = []
     class_list = []
     class_dic = {}
+    total_count = 0
 
     print(process_message_2)
-    # Where secondary classification is COMMON, add the subclasses of the primary classification to the count:
+
+    # Where secondary s_classification is COMMON, add the subclasses of the primary s_classification to the count:
     query_1 = f"SELECT A1 FROM ModuleDetails WHERE A2 = 'COMMON';"
     for row in c.execute(query_1):
         word = str(row[0])
@@ -657,6 +829,7 @@ def get_secondary_popularity_by_module():
         query_2 = f"SELECT SecondaryClassification FROM Classifications WHERE PrimaryClassification = '{item}';"
         for value in c.execute(query_2):
             word = str(value[0])
+            total_count += 1
             if word in class_dic:
                 class_dic[word] += 1
             else:
@@ -666,14 +839,131 @@ def get_secondary_popularity_by_module():
         if word != 'COMMON':
             query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails WHERE A2 = '{word}' or B2 = '{word}';"
             for row in c.execute(query):
+                total_count += row[0]
                 if word in class_dic:
                     class_dic[word] += row[0]
                 else:
                     class_dic[word] = row[0]
 
     for key, value in class_dic.items():
-        classification.append(key)
+        s_classification.append(key)
         frequency.append(value)
+        ratio = (value / total_count) * 100  # Calculate percentage of modules with current classification
+        percentage.append(ratio)
+
+    for topic in s_classification:
+        query = f"SELECT PrimaryClassification FROM Classifications " \
+                f"WHERE  SecondaryClassification = '{topic}';"
+        for i in c.execute(query):
+            word = str(i[0])
+            p_classification.append(word)
+
+    ap_count = cso_count = cm_count = gr_count = hw_count = hci_count = is_count = moc_count = nw_count = \
+        sap_count = spt_count = swe_count = toc_count = u_count = 0
+    for i in range(len(p_classification)):  # Tally the total num of modules for a given s_classification
+        if p_classification[i] == "APPLIED COMPUTING":
+            ap_count += frequency[i]
+        elif p_classification[i] == "COMPUTER SYSTEMS ORGANISATION":
+            cso_count += frequency[i]
+        elif p_classification[i] == "COMPUTING METHODOLOGIES":
+            cm_count += frequency[i]
+        elif p_classification[i] == "GENERAL & REFERENCE":
+            gr_count += frequency[i]
+        elif p_classification[i] == "HARDWARE":
+            hw_count += frequency[i]
+        elif p_classification[i] == "HUMAN-CENTERED COMPUTING":
+            hci_count += frequency[i]
+        elif p_classification[i] == "INFORMATION SYSTEMS":
+            is_count += frequency[i]
+        elif p_classification[i] == "MATHEMATICS OF COMPUTING":
+            moc_count += frequency[i]
+        elif p_classification[i] == "NETWORKS":
+            nw_count += frequency[i]
+        elif p_classification[i] == "SECURITY & PRIVACY":
+            sap_count += frequency[i]
+        elif p_classification[i] == "SOCIAL & PROFESSIONAL TOPICS":
+            spt_count += frequency[i]
+        elif p_classification[i] == "SOFTWARE & ITS ENGINEERING":
+            swe_count += frequency[i]
+        elif p_classification[i] == "THEORY OF COMPUTATION":
+            toc_count += frequency[i]
+        elif p_classification[i] == "UNCLASSIFIABLE":
+            u_count += frequency[i]
+
+    # Adjustments to accommodate division by zero
+    if ap_count == 0:
+        ap_count = 1
+    if cso_count == 0:
+        cso_count = 1
+    if cm_count == 0:
+        cm_count = 1
+    if gr_count == 0:
+        gr_count = 1
+    if hw_count == 0:
+        hw_count = 1
+    if hci_count == 0:
+        hci_count = 1
+    if is_count == 0:
+        is_count = 1
+    if moc_count == 0:
+        moc_count = 1
+    if nw_count == 0:
+        nw_count = 1
+    if sap_count == 0:
+        sap_count = 1
+    if spt_count == 0:
+        spt_count = 1
+    if swe_count == 0:
+        swe_count = 1
+    if toc_count == 0:
+        toc_count = 1
+    if u_count == 0:
+        u_count = 1
+
+    for i in range(
+            len(p_classification)):  # Calculate the percentage of each subtopic within its s_classification
+        if p_classification[i] == "APPLIED COMPUTING":
+            ratio = (frequency[i] / ap_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "COMPUTER SYSTEMS ORGANISATION":
+            ratio = (frequency[i] / cso_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "COMPUTING METHODOLOGIES":
+            ratio = (frequency[i] / cm_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "GENERAL & REFERENCE":
+            ratio = (frequency[i] / gr_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "HARDWARE":
+            ratio = (frequency[i] / hw_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "HUMAN-CENTERED COMPUTING":
+            ratio = (frequency[i] / hci_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "INFORMATION SYSTEMS":
+            ratio = (frequency[i] / is_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "MATHEMATICS OF COMPUTING":
+            ratio = (frequency[i] / moc_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "NETWORKS":
+            ratio = (frequency[i] / nw_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "SECURITY & PRIVACY":
+            ratio = (frequency[i] / sap_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "SOCIAL & PROFESSIONAL TOPICS":
+            ratio = (frequency[i] / spt_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "SOFTWARE & ITS ENGINEERING":
+            ratio = (frequency[i] / swe_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "THEORY OF COMPUTATION":
+            ratio = (frequency[i] / toc_count) * 100
+            relative_percentage.insert(i, ratio)
+        elif p_classification[i] == "UNCLASSIFIABLE":
+            ratio = (frequency[i] / u_count) * 100
+            relative_percentage.insert(i, ratio)
 
     # Column Label, Graph Title & Location:
     title = "Secondary Classification Popularity by Module"
@@ -682,22 +972,19 @@ def get_secondary_popularity_by_module():
     print(process_message_3)
 
     # Generate Query Output Dictionary:
-    stats_2d = {prime_class_label: classification, freq_label: frequency}
+    stats_2d = {prime_class_label: p_classification, sub_class_label: s_classification, percent_label: percentage,
+                freq_label: frequency, rel_percent_label: relative_percentage, }
 
     print(process_message_4)
 
     # Generate Data-frame from Dictionary:
     stats = pd.DataFrame.from_dict(stats_2d)
 
-    # Set the Classification Column Datatype as Categorical:
-    stats[prime_class_label] = stats[prime_class_label].astype('category')
-
     # Plot the Dataset:
-    get_simple_barplot(stats, title, location)
+    get_simple_barplot(stats, title, location, sub_class_label)
 
     # Order the Dataset:
-    stats.set_index(prime_class_label, inplace=True)
-    stats = stats.sort_values(by=freq_label, ascending=False)
+    stats = stats.sort_values(by=sub_class_label, ascending=True)
 
     # print(stats)  # Only required for testing
 
@@ -705,6 +992,20 @@ def get_secondary_popularity_by_module():
 
     # Save the Dataframe as .csv:
     output_to_csv(stats, title, location)
+
+    # Get Alphabetically-Split Dataset & Plot each Subset:
+    stats_1 = stats[stats[sub_class_label].str.contains('^[A-D]', regex=True, na=False)]  # A-D
+    stats_2 = stats[stats[sub_class_label].str.contains('^[E-K]', regex=True, na=False)]  # E-K
+    stats_3 = stats[stats[sub_class_label].str.contains('^[L-P]', regex=True, na=False)]  # L-P
+    stats_4 = stats[stats[sub_class_label].str.contains('^[Q-Z]', regex=True, na=False)]  # Q-Z
+    stat_list = [stats_1, stats_2, stats_3, stats_4]
+
+    # Plot the Alphabetically-Split Dataset:
+    i = 0
+    for stat in stat_list:
+        caption = f"{title} {alphabet_list[i]}"
+        get_simple_barplot(stat, caption, location, sub_class_label)
+        i += 1
 
     c.close()
 
@@ -734,6 +1035,13 @@ def get_secondary_popularity_per_university():
     # Order By Sub-Category & Rest Index:
     stats = stats.sort_values(by=sub_class_label).reset_index(drop=True)
 
+    # print(stats)  # Only required for testing
+
+    print(process_message_6)
+
+    # Save the Dataframe as .csv:
+    output_to_csv(stats, title, location)
+
     # Get Alphabetically-Split Dataset & Plot each Subset:
     get_alphabet_split_subsets_and_plot(stats, category_label, title, location)
 
@@ -745,25 +1053,16 @@ def get_secondary_popularity_per_university():
 
     # Plot the Categorically-Split Dataset:
     i = 0
-    widths = [15, 13, 11, 10, 10, 13, 11, 11, 10, 11, 11, 11, 10, 8]
-    heights = [11, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 11, 11]
+    widths = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+    heights = [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15]
     for df in cat_split:
         if df is not None:
             location = f"Topic_stats/Secondary/University/{primary_query_words[i]}"
             title = f"{primary_query_words[i]} Subcategory Popularity by University"
-            get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
-            get_catplot(df, category_label, title, 8, 2, location, 2)
+            get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 4,
+                        f"{prime_class_label} {rel_percent_label}")
+            get_catplot(df, category_label, title, 8, 2, location, 5, f"{prime_class_label} {rel_percent_label}")
             i += 1
-
-    # Order the dataset by Frequency and reset index:
-    stats = stats.sort_values(by=freq_label, ascending=False).reset_index(drop=True)
-
-    # print(stats)  # Only required for testing
-
-    print(process_message_6)
-
-    # Save the Dataframe as .csv:
-    output_to_csv(stats, title, location)
 
     # Display the Process Runtime:
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
@@ -791,6 +1090,13 @@ def get_secondary_popularity_by_region():
     # Order By Sub-Category & Rest Index:
     stats = stats.sort_values(by=sub_class_label).reset_index(drop=True)
 
+    # print(stats)  # Only required for testing
+
+    print(process_message_6)
+
+    # Save the Dataframe as .csv:
+    output_to_csv(stats, title, location)
+
     # Get Alphabetically-Split Dataset & Plot each Subset:
     get_alphabet_split_subsets_and_plot(stats, category_label, title, location)
 
@@ -808,19 +1114,10 @@ def get_secondary_popularity_by_region():
         if df is not None:
             location = f"Topic_stats/Secondary/Region/{primary_query_words[i]}"
             title = f"{primary_query_words[i]} Subcategory Popularity by Region"
-            get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
-            get_catplot(df, category_label, title, 8, 2, location, 2)
+            get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 4,
+                        f"{prime_class_label} {rel_percent_label}")
+            get_catplot(df, category_label, title, 8, 2, location, 5, f"{prime_class_label} {rel_percent_label}")
             i += 1
-
-    # Order the dataset by Frequency and reset index:
-    stats = stats.sort_values(by=freq_label, ascending=False).reset_index(drop=True)
-
-    # print(stats)  # Only required for testing
-
-    print(process_message_6)
-
-    # Save the Dataframe as .csv:
-    output_to_csv(stats, title, location)
 
     # Display the Process Runtime:
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
@@ -853,7 +1150,7 @@ def get_secondary_popularity_by_course():
 
     # Order By Category & Reset Index:
     stats = stats.sort_values(by=prime_class_label).reset_index(drop=True)
-    stats[freq_label] = stats[freq_label].astype('int32')
+    stats[percent_label] = stats[percent_label].astype('int32')
 
     # Get Categorically-Split Dataset:
     cat_split = get_categorically_split_subsets(stats)
@@ -865,11 +1162,11 @@ def get_secondary_popularity_by_course():
     for df in cat_split:
         location = f"Topic_stats/Secondary/Course/{primary_query_words[i]}"
         title = f"{primary_query_words[i]} Subcategory Popularity by Course"
-        get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
+        get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2, None)
         i += 1
 
     # Order the dataset by Frequency and reset index:
-    stats = stats.sort_values(by=freq_label, ascending=False).reset_index(drop=True)
+    stats = stats.sort_values(by=percent_label, ascending=False).reset_index(drop=True)
 
     # print(stats)  # Only required for testing
 
@@ -901,6 +1198,13 @@ def get_secondary_popularity_by_year():
     # Order By Sub-Category & Rest Index:
     stats = stats.sort_values(by=sub_class_label).reset_index(drop=True)
 
+    # print(stats)  # Only required for testing
+
+    print(process_message_6)
+
+    # Save the Dataframe as .csv:
+    output_to_csv(stats, title, location)
+
     # Get Alphabetically-Split Dataset & Plot each Subset:
     get_alphabet_split_subsets_and_plot(stats, category_label, title, location)
 
@@ -917,19 +1221,10 @@ def get_secondary_popularity_by_year():
     for df in cat_split:
         location = f"Topic_stats/Secondary/Year/{primary_query_words[i]}"
         title = f"{primary_query_words[i]} Subcategory Popularity by Year"
-        get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
-        get_catplot(df, category_label, title, 8, 2, location, 2)
+        get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 4,
+                    f"{prime_class_label} {rel_percent_label}")
+        get_catplot(df, category_label, title, 8, 2, location, 5, f"{prime_class_label} {rel_percent_label}")
         i += 1
-
-    # Order the dataset by Frequency and reset index:
-    stats = stats.sort_values(by=freq_label, ascending=False).reset_index(drop=True)
-
-    # print(stats)  # Only required for testing
-
-    print(process_message_6)
-
-    # Save the Dataframe as .csv:
-    output_to_csv(stats, title, location)
 
     # Display the Process Runtime:
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
@@ -954,6 +1249,13 @@ def get_secondary_popularity_by_core():
     # Order By Sub-Category & Rest Index:
     stats = stats.sort_values(by=sub_class_label).reset_index(drop=True)
 
+    # print(stats)  # Only required for testing
+
+    print(process_message_6)
+
+    # Save the Dataframe as .csv:
+    output_to_csv(stats, title, location)
+
     # Get Alphabetically-Split Dataset & Plot each Subset:
     get_alphabet_split_subsets_and_plot(stats, category_label, title, location)
 
@@ -970,19 +1272,10 @@ def get_secondary_popularity_by_core():
     for df in cat_split:
         location = f"Topic_stats/Secondary/Core/{primary_query_words[i]}"
         title = f"{primary_query_words[i]} Subcategory Popularity by Core and  Elective Modules"
-        get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 2)
-        get_catplot(df, category_label, title, 8, 2, location, 2)
+        get_heatmap(df, category_label, title, widths[i], heights[i], True, location, 4,
+                    f"{prime_class_label} {rel_percent_label}")
+        get_catplot(df, category_label, title, 8, 2, location, 5, f"{prime_class_label} {rel_percent_label}")
         i += 1
-
-    # Order the dataset by Frequency and reset index:
-    stats = stats.sort_values(by=freq_label, ascending=False).reset_index(drop=True)
-
-    # print(stats)  # Only required for testing
-
-    print(process_message_6)
-
-    # Save the Dataframe as .csv:
-    output_to_csv(stats, title, location)
 
     # Display the Process Runtime:
     print("Process Time:", "--- %s seconds ---" % (time.time() - start_time))
