@@ -123,9 +123,9 @@ def get_topic_distribution():
 
     # Generate plot of the dataset:
     get_catplot(course_template_df, "Year", "Typical Course Topical Distribution by Percent per Year", 8, 2, location,
-                3)
+                3, ratio_label="Percent")
     get_heatmap(course_template_df, "Year", "Typical Course Topical Distribution by Percent per Year", 20, 9, True,
-                location, 3)
+                location, 3, ratio_label="Percent")
 
     # Generate subsets of dataframe by year:
     year_1_percent = course_template_df[course_template_df["Year"] == 1]
@@ -138,8 +138,8 @@ def get_topic_distribution():
     i = 0
     for stat in stat_list:
         caption = f"Typical Course Topical Distribution by Percent for Year {year_list[i]}"
-        get_catplot(stats=stat, category_label="Year", title=caption, height=8, aspect=2, location=location, mode=4)
-        get_heatmap(stat, "Year", caption, 20, 9, True, location, 3)
+        get_catplot(stats=stat, category_label="Year", title=caption, height=8, aspect=2, location=location, mode=4, ratio_label="Percent")
+        get_heatmap(stat, "Year", caption, 20, 9, True, location, 3, ratio_label="Percent")
         i += 1
 
     print("Saving to File...")

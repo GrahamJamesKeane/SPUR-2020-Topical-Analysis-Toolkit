@@ -65,6 +65,8 @@ def main():
             get_stats()
             get_topic_distribution()
             print(process_message_2)
+            print("Total Process Time", "--- %s seconds ---" % (time.time() - start_time))
+            exit(0)
         elif user_input_1 == 5:
             from setup import get_packages, get_libs
             print(process_message_1)
