@@ -116,29 +116,37 @@ def get_topic_distribution():
     print("Transferring to Dataframe...")
 
     # Transfer course_template container to a dataframe:
-    course_template_df = pd.DataFrame.from_dict(course_template).sort_values(by=["Year", "Percent"],
-                                                                             ascending=False).reset_index(
-        drop=True)
+    course_template_df = pd.DataFrame.from_dict(course_template).sort_values(by=["Primary Classification"],
+                                                                             ascending=True).reset_index(drop=True)
     location = "Topical_Distribution"
 
     # Generate plot of the dataset:
-    get_catplot(course_template_df, "Year", "Typical Course Topical Distribution by Percent per Year", 8, 2, location,
+    get_catplot(course_template_df, "Year", "Typical Course Topical Distribution per Year", 8, 2, location,
                 3, ratio_label="Percent")
-    get_heatmap(course_template_df, "Year", "Typical Course Topical Distribution by Percent per Year", 20, 9, True,
+    get_heatmap(course_template_df, "Year", "Typical Course Topical Distribution per Year", 20, 9, True,
                 location, 3, ratio_label="Percent")
 
     # Generate subsets of dataframe by year:
-    year_1_percent = course_template_df[course_template_df["Year"] == 1]
-    year_2_percent = course_template_df[course_template_df["Year"] == 2]
-    year_3_percent = course_template_df[course_template_df["Year"] == 3]
-    year_4_percent = course_template_df[course_template_df["Year"] == 4]
+    year_1_percent = course_template_df[course_template_df["Year"] == 1].sort_values(by=["Primary Classification"],
+                                                                                     ascending=True).reset_index(
+        drop=True)
+    year_2_percent = course_template_df[course_template_df["Year"] == 2].sort_values(by=["Primary Classification"],
+                                                                                     ascending=True).reset_index(
+        drop=True)
+    year_3_percent = course_template_df[course_template_df["Year"] == 3].sort_values(by=["Primary Classification"],
+                                                                                     ascending=True).reset_index(
+        drop=True)
+    year_4_percent = course_template_df[course_template_df["Year"] == 4].sort_values(by=["Primary Classification"],
+                                                                                     ascending=True).reset_index(
+        drop=True)
     stat_list = [year_1_percent, year_2_percent, year_3_percent, year_4_percent]
 
     # Plot the Year-Split Dataset:
     i = 0
     for stat in stat_list:
-        caption = f"Typical Course Topical Distribution by Percent for Year {year_list[i]}"
-        get_catplot(stats=stat, category_label="Year", title=caption, height=8, aspect=2, location=location, mode=4, ratio_label="Percent")
+        caption = f"Typical Course Topical Distribution Year {year_list[i]}"
+        get_catplot(stats=stat, category_label="Year", title=caption, height=8, aspect=2, location=location, mode=4,
+                    ratio_label="Percent")
         get_heatmap(stat, "Year", caption, 20, 9, True, location, 3, ratio_label="Percent")
         i += 1
 
@@ -149,6 +157,5 @@ def get_topic_distribution():
     output_to_csv(course_template_df, f"Typical_Course_Topical_Distribution_by_Percent_per_Year_{stamp}", location)
 
     # print(course_template_df)  # For testing only
-
 
 # get_topic_distribution()  # For testing only
