@@ -5,7 +5,7 @@ import pandas as pd
 import seaborn as sns
 
 from common_elements import output_to_png, open_sqlite, primary_query_words, secondary_query_words, output_to_csv, \
-    get_region_list, get_course_list, set_max_rows_pandas, year_list, core_list, get_uni_list
+    get_region_list, set_max_rows_pandas, year_list, core_list, get_uni_list
 
 # Set Pandas options to view all entries:
 set_max_rows_pandas()

@@ -11,7 +11,7 @@ from nltk.corpus import wordnet
 from wordcloud import WordCloud
 
 from common_elements import excluded_words, primary_query_words, open_sqlite, output_to_csv, get_region_list, \
-    get_uni_list_region, check_dir_exists, set_max_rows_pandas, year_list, core_list, get_uni_list
+    check_dir_exists, set_max_rows_pandas, year_list, core_list, get_uni_list
 
 # Set Pandas options to view all entries:
 set_max_rows_pandas()
