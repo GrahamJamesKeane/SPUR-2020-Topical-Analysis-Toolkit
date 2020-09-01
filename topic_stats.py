@@ -226,31 +226,31 @@ def get_pop_lists(item_list, category, level):
         if level == 2:
             query_a1 = query_b1 = None
             if category == 1:  # University:
-                query_a1 = f"SELECT A1 FROM ModuleDetails WHERE UniversityName = '{item}' AND A2 = 'COMMON';"
-                query_b1 = f"SELECT B1 FROM ModuleDetails WHERE UniversityName = '{item}' AND B2 = 'COMMON';"
+                query_a1 = f"SELECT A1 FROM Module WHERE UniversityName = '{item}' AND A2 = 'COMMON';"
+                query_b1 = f"SELECT B1 FROM Module WHERE UniversityName = '{item}' AND B2 = 'COMMON';"
             elif category == 3:  # Year Offered
-                query_a1 = f"SELECT ModuleDetails.A1 FROM ModuleDetails INNER JOIN CourseDetails " \
-                           f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                           f"WHERE YearOffered = {item} AND ModuleDetails.A2 = 'COMMON';"
-                query_b1 = f"SELECT ModuleDetails.B1 FROM ModuleDetails INNER JOIN CourseDetails " \
-                           f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                           f"WHERE YearOffered = {item} AND ModuleDetails.B2 = 'COMMON';"
+                query_a1 = f"SELECT Module.A1 FROM Module INNER JOIN Course " \
+                           f"ON Course.ModuleCode = Module.ModuleCode " \
+                           f"WHERE YearOffered = {item} AND Module.A2 = 'COMMON';"
+                query_b1 = f"SELECT Module.B1 FROM Module INNER JOIN Course " \
+                           f"ON Course.ModuleCode = Module.ModuleCode " \
+                           f"WHERE YearOffered = {item} AND Module.B2 = 'COMMON';"
             elif category == 4:  # Core
-                query_a1 = f"SELECT ModuleDetails.A1 FROM ModuleDetails INNER JOIN CourseDetails " \
-                           f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                           f"WHERE Core = '{item}' AND ModuleDetails.A2 = 'COMMON';"
-                query_b1 = f"SELECT ModuleDetails.B1 FROM ModuleDetails INNER JOIN CourseDetails " \
-                           f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                           f"WHERE Core = '{item}' AND ModuleDetails.B2 = 'COMMON';"
+                query_a1 = f"SELECT Module.A1 FROM Module INNER JOIN Course " \
+                           f"ON Course.ModuleCode = Module.ModuleCode " \
+                           f"WHERE Core = '{item}' AND Module.A2 = 'COMMON';"
+                query_b1 = f"SELECT Module.B1 FROM Module INNER JOIN Course " \
+                           f"ON Course.ModuleCode = Module.ModuleCode " \
+                           f"WHERE Core = '{item}' AND Module.B2 = 'COMMON';"
             elif category == 5:  # Region
-                query_a1 = f"SELECT ModuleDetails.A1 FROM ModuleDetails " \
-                           f"INNER JOIN CourseDetails ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                           f"INNER JOIN Universities ON CourseDetails.UniversityName = Universities.UniversityName " \
-                           f"WHERE Country = '{item}' AND ModuleDetails.A2 = 'COMMON';"
-                query_b1 = f"SELECT ModuleDetails.B1 FROM ModuleDetails " \
-                           f"INNER JOIN CourseDetails ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                           f"INNER JOIN Universities ON CourseDetails.UniversityName = Universities.UniversityName " \
-                           f"WHERE Country = '{item}' AND ModuleDetails.B2 = 'COMMON';"
+                query_a1 = f"SELECT Module.A1 FROM Module " \
+                           f"INNER JOIN Course ON Course.ModuleCode = Module.ModuleCode " \
+                           f"INNER JOIN University ON Course.UniversityName = University.UniversityName " \
+                           f"WHERE Country = '{item}' AND Module.A2 = 'COMMON';"
+                query_b1 = f"SELECT Module.B1 FROM Module " \
+                           f"INNER JOIN Course ON Course.ModuleCode = Module.ModuleCode " \
+                           f"INNER JOIN University ON Course.UniversityName = University.UniversityName " \
+                           f"WHERE Country = '{item}' AND Module.B2 = 'COMMON';"
 
             print(process_message_3)
 
@@ -285,30 +285,30 @@ def get_pop_lists(item_list, category, level):
             query_3 = None
             if key != 'COMMON':
                 if category == 1:  # University:
-                    query_3 = f"SELECT COUNT(ModuleCode) FROM ModuleDetails " \
+                    query_3 = f"SELECT COUNT(ModuleCode) FROM Module " \
                               f"WHERE UniversityName = '{item}' AND {class_1} = '{key}' or {class_2} = '{key}';"
                 elif category == 2:  # Course:
-                    query_3 = f"SELECT COUNT(CourseDetails.ModuleCode) FROM CourseDetails INNER JOIN ModuleDetails " \
-                              f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                              f"WHERE CourseCode = '{item}' AND (ModuleDetails.{class_1} = '{key}' " \
-                              f"or ModuleDetails.{class_2} = '{key}');"
+                    query_3 = f"SELECT COUNT(Course.ModuleCode) FROM Course INNER JOIN Module " \
+                              f"ON Course.ModuleCode = Module.ModuleCode " \
+                              f"WHERE CourseCode = '{item}' AND (Module.{class_1} = '{key}' " \
+                              f"or Module.{class_2} = '{key}');"
                 elif category == 3:  # Year Offered
-                    query_3 = f"SELECT COUNT(CourseDetails.ModuleCode) FROM CourseDetails INNER JOIN ModuleDetails " \
-                              f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                              f"WHERE YearOffered = {item} AND (ModuleDetails.{class_1} = '{key}' " \
-                              f"or ModuleDetails.{class_2} = '{key}');"
+                    query_3 = f"SELECT COUNT(Course.ModuleCode) FROM Course INNER JOIN Module " \
+                              f"ON Course.ModuleCode = Module.ModuleCode " \
+                              f"WHERE YearOffered = {item} AND (Module.{class_1} = '{key}' " \
+                              f"or Module.{class_2} = '{key}');"
                 elif category == 4:  # Core:
-                    query_3 = f"SELECT COUNT(CourseDetails.ModuleCode) FROM CourseDetails INNER JOIN ModuleDetails " \
-                              f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                              f"WHERE Core = '{item}' AND (ModuleDetails.{class_1} = '{key}' " \
-                              f"or ModuleDetails.{class_2} = '{key}');"
+                    query_3 = f"SELECT COUNT(Course.ModuleCode) FROM Course INNER JOIN Module " \
+                              f"ON Course.ModuleCode = Module.ModuleCode " \
+                              f"WHERE Core = '{item}' AND (Module.{class_1} = '{key}' " \
+                              f"or Module.{class_2} = '{key}');"
                 elif category == 5:  # Region
-                    query_3 = f"SELECT COUNT(ModuleDetails.A1) FROM ModuleDetails " \
-                              f"INNER JOIN CourseDetails ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                              f"INNER JOIN Universities " \
-                              f"ON CourseDetails.UniversityName = Universities.UniversityName " \
-                              f"WHERE Country = '{item}' AND (ModuleDetails.{class_1} = '{key}' " \
-                              f"or ModuleDetails.{class_2} = '{key}');"
+                    query_3 = f"SELECT COUNT(Module.A1) FROM Module " \
+                              f"INNER JOIN Course ON Course.ModuleCode = Module.ModuleCode " \
+                              f"INNER JOIN University " \
+                              f"ON Course.UniversityName = University.UniversityName " \
+                              f"WHERE Country = '{item}' AND (Module.{class_1} = '{key}' " \
+                              f"or Module.{class_2} = '{key}');"
 
                 print(process_message_3)
 
@@ -562,7 +562,7 @@ def get_primary_popularity_by_module():
 
     # Generate Query and Transfer to List:
     for word in primary_query_words:
-        query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails WHERE A1 = '{word}' or B1 = '{word}';"
+        query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM Module WHERE A1 = '{word}' or B1 = '{word}';"
         classification.append(word)
         for row in c.execute(query):
             total_count += row[0]
@@ -772,11 +772,11 @@ def get_secondary_popularity_by_module():
     print(process_message_2)
 
     # Where secondary s_classification is COMMON, add the subclasses of the primary s_classification to the count:
-    query_1 = f"SELECT A1 FROM ModuleDetails WHERE A2 = 'COMMON';"
+    query_1 = f"SELECT A1 FROM Module WHERE A2 = 'COMMON';"
     for row in c.execute(query_1):
         word = str(row[0])
         class_list.append(word)
-    query_1 = f"SELECT B1 FROM ModuleDetails WHERE B2 = 'COMMON';"
+    query_1 = f"SELECT B1 FROM Module WHERE B2 = 'COMMON';"
     for row in c.execute(query_1):
         word = str(row[0])
         class_list.append(word)
@@ -793,7 +793,7 @@ def get_secondary_popularity_by_module():
 
     for word in secondary_query_words:
         if word != 'COMMON':
-            query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM ModuleDetails WHERE A2 = '{word}' or B2 = '{word}';"
+            query = f"SELECT COUNT(ModuleCode) AS 'Count' FROM Module WHERE A2 = '{word}' or B2 = '{word}';"
             for row in c.execute(query):
                 total_count += row[0]
                 if word in class_dic:

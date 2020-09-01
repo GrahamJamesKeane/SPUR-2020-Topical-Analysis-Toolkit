@@ -142,32 +142,32 @@ def get_data(category, name, label, data, column, location):
     for key in primary_query_words:
         if category == 1:  # All:
             filename = f"{key} TITLE KEYWORDS"
-            query = f"SELECT {column} FROM ModuleDetails WHERE A1 = '{key}' or B1 = '{key}';"
+            query = f"SELECT {column} FROM Module WHERE A1 = '{key}' or B1 = '{key}';"
         elif category == 2:  # University:
             filename = f"{key} {name} TITLE KEYWORDS"
-            query = f"SELECT {column} FROM ModuleDetails WHERE UniversityName = '{name}' AND " \
+            query = f"SELECT {column} FROM Module WHERE UniversityName = '{name}' AND " \
                     f"(A1 = '{key}' or B1 = '{key}');"
         elif category == 3:  # Year
             filename = f"YEAR {name} {key} TITLE KEYWORDS"
-            query = f"SELECT ModuleDetails.{column} FROM ModuleDetails INNER JOIN CourseDetails " \
-                    f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                    f"WHERE YearOffered = {name} AND (ModuleDetails.A1 = '{key}' " \
-                    f"or ModuleDetails.B1 = '{key}');"
+            query = f"SELECT Module.{column} FROM Module INNER JOIN Course " \
+                    f"ON Course.ModuleCode = Module.ModuleCode " \
+                    f"WHERE YearOffered = {name} AND (Module.A1 = '{key}' " \
+                    f"or Module.B1 = '{key}');"
         elif category == 4:  # Core:
             filename = f"{name} {key} TITLE KEYWORDS"
-            query = f"SELECT ModuleDetails.{column} FROM ModuleDetails INNER JOIN CourseDetails " \
-                    f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                    f"WHERE Core = '{name}' AND (ModuleDetails.A1 = '{key}' " \
-                    f"or ModuleDetails.B1 = '{key}');"
+            query = f"SELECT Module.{column} FROM Module INNER JOIN Course " \
+                    f"ON Course.ModuleCode = Module.ModuleCode " \
+                    f"WHERE Core = '{name}' AND (Module.A1 = '{key}' " \
+                    f"or Module.B1 = '{key}');"
         elif category == 5:  # Region
             filename = f"{name} {key} TITLE KEYWORDS"
-            query = f"SELECT ModuleDetails.{column} FROM ModuleDetails " \
-                    f"INNER JOIN CourseDetails " \
-                    f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                    f"INNER JOIN Universities " \
-                    f"ON Universities.UniversityName = CourseDetails.UniversityName " \
-                    f"WHERE Country = '{name}' AND (ModuleDetails.A1 = '{key}' " \
-                    f"or ModuleDetails.B1 = '{key}');"
+            query = f"SELECT Module.{column} FROM Module " \
+                    f"INNER JOIN Course " \
+                    f"ON Course.ModuleCode = Module.ModuleCode " \
+                    f"INNER JOIN University " \
+                    f"ON University.UniversityName = Course.UniversityName " \
+                    f"WHERE Country = '{name}' AND (Module.A1 = '{key}' " \
+                    f"or Module.B1 = '{key}');"
 
         # Get a list of keywords:
         keyword_list = process_keywords(query)

@@ -5,43 +5,39 @@ import sqlite3
 import pandas as pd
 from datetime import datetime
 
-primary_query_words = ['APPLIED COMPUTING', 'COMPUTER SYSTEMS ORGANISATION', 'COMPUTING METHODOLOGIES',
-                       'GENERAL & REFERENCE', 'HARDWARE', 'HUMAN-CENTERED COMPUTING', 'INFORMATION SYSTEMS',
-                       'MATHEMATICS OF COMPUTING', 'NETWORKS', 'SECURITY & PRIVACY', 'SOCIAL & PROFESSIONAL TOPICS',
-                       'SOFTWARE & ITS ENGINEERING', 'THEORY OF COMPUTATION', 'UNCLASSIFIABLE']
 
-secondary_query_words = ['ACCESSIBILITY', 'ARCHITECTURES', 'ARTIFICIAL INTELLIGENCE', 'ARTS & HUMANITIES',
-                         'COLLABORATIVE & SOCIAL COMPUTING', 'COMMON', 'COMMUNICATION HARDWARE, INTERFACES & STORAGE',
-                         'COMPUTATIONAL COMPLEXITY & CRYPTOGRAPHY', 'COMPUTER FORENSICS',
-                         'COMPUTER GRAPHICS', 'COMPUTERS IN OTHER DOMAINS', 'COMPUTING / TECHNOLOGY POLICY',
-                         'CONCURRENT COMPUTING METHODOLOGIES', 'CONTINUOUS MATHEMATICS',
-                         'CROSS-COMPUTING TOOLS & TECHNIQUES', 'CRYPTOGRAPHY', 'DATA MANAGEMENT SYSTEMS',
-                         'DATABASE & STORAGE SECURITY', 'DEPENDABLE & FAULT-TOLERANT SYSTEMS & NETWORKS',
-                         'DESIGN & ANALYSIS OF ALGORITHMS', 'DISCRETE MATHEMATICS',
-                         'DISTRIBUTED COMPUTING METHODOLOGIES', 'DOCUMENT MANAGEMENT & TEXT PROCESSING',
-                         'DOCUMENT TYPES', 'EDUCATION', 'ELECTRONIC COMMERCE', 'ELECTRONIC DESIGN AUTOMATION',
-                         'EMBEDDED & CYBER-PHYSICAL SYSTEMS', 'EMERGING TECHNOLOGIES', 'ENTERPRISE COMPUTING',
-                         'FORMAL LANGUAGES & AUTOMATA THEORY', 'FORMAL METHODS & THEORY OF SECURITY', 'HARDWARE TEST',
-                         'HARDWARE VALIDATION', 'HUMAN & SOCIETAL ASPECTS OF SECURITY & PRIVACY',
-                         'HUMAN COMPUTER INTERACTION (HCI)', 'INFORMATION RETRIEVAL', 'INFORMATION STORAGE SYSTEMS',
-                         'INFORMATION SYSTEMS APPLICATIONS', 'INFORMATION THEORY', 'INTEGRATED CIRCUITS',
-                         'INTERACTION DESIGN',
-                         'INTRUSION / ANOMALY DETECTION & MALWARE MITIGATION', 'LAW, SOCIAL & BEHAVIORAL SCIENCES',
-                         'LIFE & MEDICAL SCIENCES', 'LOGIC', 'MACHINE LEARNING', 'MATHEMATICAL ANALYSIS',
-                         'MATHEMATICAL SOFTWARE', 'MODELLING & SIMULATION', 'MODELS OF COMPUTATION',
-                         'NETWORK ALGORITHMS', 'NETWORK ARCHITECTURES', 'NETWORK COMPONENTS',
-                         'NETWORK PERFORMANCE EVALUATION', 'NETWORK PROPERTIES', 'NETWORK PROTOCOLS',
-                         'NETWORK SECURITY', 'NETWORK SERVICES', 'NETWORK TYPES',
-                         'OPERATIONS RESEARCH', 'PARALLEL COMPUTING METHODOLOGIES', 'PHYSICAL SCIENCES & ENGINEERING',
-                         'POWER & ENERGY', 'PRINTED CIRCUIT BOARDS', 'PROBABILITY & STATISTICS', 'PROFESSIONAL TOPICS',
-                         'RANDOMNESS, GEOMETRY & DISCRETE STRUCTURES', 'REAL-TIME SYSTEMS', 'ROBUSTNESS',
-                         'SECURITY IN HARDWARE', 'SECURITY SERVICES', 'SEMANTICS & REASONING',
-                         'SOFTWARE & APPLICATION SECURITY', 'SOFTWARE CREATION & MANAGEMENT',
-                         'SOFTWARE NOTATIONS & TOOLS', 'SOFTWARE ORGANISATION & PROPERTIES',
-                         'SYMBOLIC & ALGEBRAIC MANIPULATION', 'SYSTEMS SECURITY',
-                         'THEORY & ALGORITHMS FOR APPLICATION DOMAINS', 'UBIQUITOUS & MOBILE COMPUTING',
-                         'UNCLASSIFIABLE', 'USER CHARACTERISTICS', 'VERY LARGE SCALE INTEGRATION DESIGN',
-                         'VISUALISATION', 'WORLD WIDE WEB']
+# Open a connection to the database:
+def open_sqlite():
+    conn = sqlite3.connect('acm_curricula_2020_spur.db')
+    c = conn.cursor()
+    return c
+
+
+def get_p_classifications():
+    c = open_sqlite()
+    p_list = []
+    query = f"SELECT PrimaryClassification FROM Classifications " \
+            f"GROUP BY PrimaryClassification;"
+    for row in c.execute(query):
+        p_list.append(str(row[0]))
+    c.close()
+    return p_list
+
+
+def get_s_classifications():
+    c = open_sqlite()
+    s_list = []
+    query = f"SELECT SecondaryClassification FROM Classifications " \
+            f"ORDER BY SecondaryClassification;"
+    for row in c.execute(query):
+        s_list.append(str(row[0]))
+    c.close()
+    return s_list
+
+
+primary_query_words = get_p_classifications()
+
+secondary_query_words = get_s_classifications()
 
 excluded_words = ['&', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'able', 'about', 'achieved', 'administer',
                   'adv', 'against', 'aim', 'aims', 'all', 'allow', 'almost', 'also', 'an', 'and', 'any', 'any', 'apply',
@@ -87,13 +83,6 @@ def alphabetically_sort_text_lists(text_list):
     print(list(text_list))
 
 
-# Open a connection to the database:
-def open_sqlite():
-    conn = sqlite3.connect('acm_curricula_2020_spur.db')
-    c = conn.cursor()
-    return c
-
-
 # Check if directory exists and create location if not for saving files:
 def check_dir_exists(location):
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -120,7 +109,7 @@ def output_to_csv(database, filename, location):
 def get_region_list():
     c = open_sqlite()
     region_list = []
-    query = f"SELECT Country FROM Universities GROUP BY Country;"
+    query = f"SELECT Country FROM University GROUP BY Country;"
     for row in c.execute(query):
         region_list.append(str(row[0]))
     c.close()
@@ -130,28 +119,17 @@ def get_region_list():
 def get_course_list():
     c = open_sqlite()
     course_list = []
-    query = f"SELECT CourseCode FROM CourseList ORDER BY CourseCode;"
+    query = f"SELECT CourseCode FROM Course GROUP BY CourseCode;"
     for row in c.execute(query):
         course_list.append(str(row[0]))
     c.close()
     return course_list
 
 
-def get_uni_list_region(region):
-    c = open_sqlite()
-    uni_list = []
-    query = f"SELECT UniversityName FROM Universities " \
-            f"WHERE Country = '{region}' ORDER BY UniversityName;"
-    for row in c.execute(query):
-        uni_list.append(str(row[0]))
-    c.close()
-    return uni_list
-
-
 def get_uni_list():
     c = open_sqlite()
     uni_list = []
-    query = f"SELECT UniversityName FROM Universities " \
+    query = f"SELECT UniversityName FROM University " \
             f"ORDER BY UniversityName;"
     for row in c.execute(query):
         uni_list.append(str(row[0]))

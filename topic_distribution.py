@@ -60,10 +60,10 @@ def get_topic_distribution():
         for course in course_list:
             if course != "UNKNOWN":
                 for key in primary_query_words:
-                    query = f"SELECT COUNT(CourseDetails.ModuleCode) FROM CourseDetails INNER JOIN ModuleDetails " \
-                            f"ON CourseDetails.ModuleCode = ModuleDetails.ModuleCode " \
-                            f"WHERE CourseCode = '{course}' AND YearOffered = {year} AND (ModuleDetails.A1 = '{key}' " \
-                            f"or ModuleDetails.B1 = '{key}');"
+                    query = f"SELECT COUNT(Course.ModuleCode) FROM Course INNER JOIN Module " \
+                            f"ON Course.ModuleCode = Module.ModuleCode " \
+                            f"WHERE CourseCode = '{course}' AND YearOffered = {year} AND (Module.A1 = '{key}' " \
+                            f"or Module.B1 = '{key}');"
                     for row in c.execute(query):  # Add the classification frequency to
                         key_count = row[0]
                         if year == 1:
