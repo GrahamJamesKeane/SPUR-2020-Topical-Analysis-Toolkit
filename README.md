@@ -21,6 +21,9 @@ https://sqlitebrowser.org/
 
 This research project was undertaken on behalf of the Department of Computer Science in Maynooth University as part of the Summer Programme for Undergraduate Researchers (SPUR) 2020.
 
+https://padlet.com/MU_EXPLEARING/d4ngte96l3prn9dp
+
+
 Package Info:
 
 	Environment: Python 3.8
